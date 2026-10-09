@@ -1,0 +1,2 @@
+# Preserve the exact upstream license text, including its original whitespace.
+licenses/NSIS-COPYING.txt -text whitespace=-trailing-space

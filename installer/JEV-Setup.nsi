@@ -13,7 +13,7 @@ Unicode true
 !ifndef OUTPUT_FILE
   !error "OUTPUT_FILE is required"
 !endif
-!ifdef NSIS_WIN32
+!ifdef BUILD_WINDOWS
   !define PACKAGE_FILES "${PACKAGE_DIR}\*"
 !else
   !define PACKAGE_FILES "${PACKAGE_DIR}/*"
@@ -53,20 +53,20 @@ Var ProcessOutput
 
 Function .onInit
   ${IfNot} ${IsNativeAMD64}
-    MessageBox MB_OK|MB_ICONSTOP "此版本需要 Windows 11 x64；目前尚不支援 ARM64。"
+    MessageBox MB_OK|MB_ICONSTOP "此版本需要 Windows 11 x64；目前尚不支援 ARM64。" /SD IDOK
     SetErrorLevel 1
     Quit
   ${EndIf}
   SetRegView 64
   ReadRegStr $0 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion" "CurrentBuildNumber"
   ${If} $0 < 22000
-    MessageBox MB_OK|MB_ICONSTOP "此版本需要 Windows 11（組建 22000 或更新）。"
+    MessageBox MB_OK|MB_ICONSTOP "此版本需要 Windows 11（組建 22000 或更新）。" /SD IDOK
     SetErrorLevel 1
     Quit
   ${EndIf}
   ReadRegStr $0 HKLM "SOFTWARE\JEV-IME" "InstallationType"
   ${If} $0 == "MSI"
-    MessageBox MB_OK|MB_ICONSTOP "請先從 Windows 設定解除安裝現有的 JEV MSI 版本，再執行此安裝程式。"
+    MessageBox MB_OK|MB_ICONSTOP "請先從 Windows 設定解除安裝現有的 JEV MSI 版本，再執行此安裝程式。" /SD IDOK
     SetErrorLevel 1
     Quit
   ${EndIf}
@@ -87,13 +87,13 @@ Section "JEV 智慧注音" SecMain
   Pop $ProcessOutput
   DetailPrint "$ProcessOutput"
   ${If} $ProcessResult != 0
-    MessageBox MB_OK|MB_ICONSTOP "JEV 安裝失敗（代碼：$ProcessResult）。$\r$\n$\r$\n$ProcessOutput"
+    MessageBox MB_OK|MB_ICONSTOP "JEV 安裝失敗（代碼：$ProcessResult）。$\r$\n$\r$\n$ProcessOutput" /SD IDOK
     SetErrorLevel 1
     Abort
   ${EndIf}
   ReadRegStr $InstalledVersionDir HKLM "SOFTWARE\JEV-IME" "InstallDir"
   ${If} $InstalledVersionDir == ""
-    MessageBox MB_OK|MB_ICONSTOP "無法確認 JEV 安裝目錄，安裝未完成。"
+    MessageBox MB_OK|MB_ICONSTOP "無法確認 JEV 安裝目錄，安裝未完成。" /SD IDOK
     SetErrorLevel 1
     Abort
   ${EndIf}
@@ -124,12 +124,12 @@ Function un.onInit
   ReadRegStr $InstalledVersionDir HKLM "SOFTWARE\JEV-IME" "InstallDir"
   ReadRegStr $0 HKLM "SOFTWARE\JEV-IME" "InstallationType"
   ${If} $0 != "EXE"
-    MessageBox MB_OK|MB_ICONSTOP "目前的 JEV 版本不是由此安裝程式管理。請從 Windows 設定解除安裝。"
+    MessageBox MB_OK|MB_ICONSTOP "目前的 JEV 版本不是由此安裝程式管理。請從 Windows 設定解除安裝。" /SD IDOK
     SetErrorLevel 1
     Abort
   ${EndIf}
   ${If} $InstalledVersionDir == ""
-    MessageBox MB_OK|MB_ICONSTOP "找不到 JEV 安裝資訊。"
+    MessageBox MB_OK|MB_ICONSTOP "找不到 JEV 安裝資訊。" /SD IDOK
     SetErrorLevel 1
     Abort
   ${EndIf}
@@ -142,7 +142,7 @@ Section "Uninstall"
   Pop $ProcessOutput
   DetailPrint "$ProcessOutput"
   ${If} $ProcessResult != 0
-    MessageBox MB_OK|MB_ICONSTOP "JEV 解除安裝失敗（代碼：$ProcessResult）。$\r$\n$\r$\n$ProcessOutput"
+    MessageBox MB_OK|MB_ICONSTOP "JEV 解除安裝失敗（代碼：$ProcessResult）。$\r$\n$\r$\n$ProcessOutput" /SD IDOK
     SetErrorLevel 1
     Abort
   ${EndIf}

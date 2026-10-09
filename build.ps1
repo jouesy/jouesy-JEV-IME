@@ -48,6 +48,7 @@ try {
     Copy-Item -LiteralPath 'docs/install-exe.md' -Destination "$stage/README.md"
     Copy-Item -LiteralPath 'docs/windows-validation.md' -Destination $stage
     Copy-Item -LiteralPath 'LICENSE.txt', 'NOTICE.md' -Destination $stage
+    Copy-Item -LiteralPath 'licenses/NSIS-COPYING.txt' -Destination "$stage/licenses"
     # Retain all OpenCC and bundled dependency license notices in binary packages.
     $openccRoot = (Resolve-Path 'third_party/OpenCC').Path
     Get-ChildItem -LiteralPath $openccRoot -Recurse -File |

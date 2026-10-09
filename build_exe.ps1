@@ -21,7 +21,7 @@ if (-not (Test-Path -LiteralPath $MakeNsis)) { throw 'Install NSIS 3.11 or suppl
 $version = (& $MakeNsis /VERSION).Trim()
 if ($LASTEXITCODE -ne 0 -or $version -notmatch '^v?3\.11([.-]|$)') { throw "NSIS 3.11 is required; found '$version'." }
 $output = Join-Path $PSScriptRoot "dist/JEV-Setup-$($product.version)-win-x64.exe"
-Invoke-JevNative $MakeNsis @('/V3', '/INPUTCHARSET', 'UTF8', "/DPACKAGE_DIR=$packageDir",
+Invoke-JevNative $MakeNsis @('/V3', '/INPUTCHARSET', 'UTF8', '/DBUILD_WINDOWS=1', "/DPACKAGE_DIR=$packageDir",
     "/DPRODUCT_VERSION=$($product.version)", "/DOUTPUT_FILE=$output",
     (Join-Path $PSScriptRoot 'installer/JEV-Setup.nsi'))
 $hash = (Get-FileHash -LiteralPath $output -Algorithm SHA256).Hash.ToLowerInvariant()
