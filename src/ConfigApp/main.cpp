@@ -56,7 +56,7 @@ using namespace McBopomofo;
 namespace {
 
 constexpr const wchar_t* kSingleInstanceMutexName =
-    L"Local\\WinMcBopomofoConfigSingleInstance";
+    L"Local\\JEVIMEConfigSingleInstance";
 constexpr int kReloadCommand = IDC_RELOAD_BUTTON;
 constexpr int kManualLinkCommand = IDC_MANUAL_LINK;
 constexpr int kProjectHomepageCommand = IDC_PROJECT_HOMEPAGE_LINK;

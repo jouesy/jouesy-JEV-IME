@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <WixLocalization Culture="zh-TW" xmlns="http://wixtoolset.org/schemas/v4/wxl">
-  <String Id="ProductName" Value="小麥注音" />
-  <String Id="Manufacturer" Value="OpenVanilla.org" />
-  <String Id="CoreFeatureTitle" Value="小麥注音核心" />
-  <String Id="ConfigShortcutName" Value="小麥注音設定" />
-  <String Id="ConfigShortcutDesc" Value="設定小麥注音輸入法" />
+  <String Id="ProductName" Value="JEV 智慧注音" />
+  <String Id="CoreFeatureTitle" Value="JEV 注音核心" />
+  <String Id="ConfigShortcutName" Value="JEV 智慧注音設定" />
+  <String Id="ConfigShortcutDesc" Value="設定 JEV 繁體中文注音輸入法" />
   <String Id="DowngradeError" Value="已安裝較新版本的 [ProductName]。" />
+  <String Id="WindowsRequired" Value="JEV V0.1 需要 Windows 11 x64。" />
+  <String Id="ScriptInstallExists" Value="請先執行舊腳本版的 Uninstall-JEV.ps1，再安裝 MSI；個人詞庫會保留。" />
 </WixLocalization>

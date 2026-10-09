@@ -35,7 +35,7 @@
 #pragma comment(lib, "dwrite.lib")
 #pragma comment(lib, "dwmapi.lib")
 
-const wchar_t* const TOOLTIP_WINDOW_CLASS = L"WinMcBopomofoTooltipWindow";
+const wchar_t* const TOOLTIP_WINDOW_CLASS = L"JEVIMETooltipWindow";
 
 namespace {
 
@@ -274,7 +274,7 @@ void TooltipWindow::SetOwnerWindow(HWND ownerHwnd) {
   ownerHwnd_ = ownerHwnd;
   updateRenderMode_();
 #ifdef WINMCBOPOMOFO_SERVER_SIDE_POPUP
-  // Server-side popups are owned by McBopomofoServer.exe. ownerHwnd_ is kept
+  // Server-side popups are owned by JEVServer.exe. ownerHwnd_ is kept
   // only for compatibility with the shared owner-update path.
 #else
   if (!hwnd_) {

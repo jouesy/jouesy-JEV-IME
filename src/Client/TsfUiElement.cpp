@@ -102,7 +102,7 @@ STDMETHODIMP CCandidateListUIElement::GetDescription(BSTR* pbstr) {
   if (pbstr == nullptr) {
     return E_INVALIDARG;
   }
-  *pbstr = SysAllocString(L"McBopomofo Candidate List");
+  *pbstr = SysAllocString(L"JEV Candidate List");
   return *pbstr ? S_OK : E_OUTOFMEMORY;
 }
 
@@ -384,7 +384,7 @@ STDMETHODIMP CReadingInformationUIElement::GetDescription(BSTR* pbstr) {
   if (pbstr == nullptr) {
     return E_INVALIDARG;
   }
-  *pbstr = SysAllocString(L"McBopomofo Reading Information");
+  *pbstr = SysAllocString(L"JEV Reading Information");
   return *pbstr ? S_OK : E_OUTOFMEMORY;
 }
 

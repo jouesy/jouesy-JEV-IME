@@ -89,7 +89,7 @@ std::wstring GetLogFilePath() {
   }
 
   std::wstring logPath(tempPath);
-  logPath += L"mcbopomofo_server.log";
+  logPath += L"jev_server.log";
   return logPath;
 }
 

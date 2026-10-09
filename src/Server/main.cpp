@@ -70,7 +70,7 @@ using namespace McBopomofo;
 #define IDM_STOP_SERVER 1011
 
 constexpr const wchar_t* kServerSingleInstanceMutexName =
-    L"Local\\WinMcBopomofoServerSingleInstance";
+    L"Local\\JEVIMEServerSingleInstance";
 InputController* g_Controller = nullptr;
 bool g_RestartRequested = false;
 std::function<void()> g_ReloadSettingsCallback;
@@ -807,7 +807,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
   auto reloadSettings = [&]() {
     FCITX_MCBOPOMOFO_INFO()
         << "Reloading settings from: "
-        << (std::filesystem::path(userDir) / "mcbopomofo.ini").string();
+        << (std::filesystem::path(userDir) / "jev.ini").string();
     settings.load();
     settings.applyTo(controller);
     controller.setCandidateWindowColors(ReadCandidateWindowColors());
@@ -828,7 +828,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
   };
 
   ServerFileReloader fileReloader(
-      std::filesystem::path(userDir) / "mcbopomofo.ini",
+      std::filesystem::path(userDir) / "jev.ini",
       [&]() {
         std::lock_guard<std::mutex> lock(reloadMutex);
         reloadSettings();
@@ -955,10 +955,10 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
   wcex.hInstance = GetModuleHandle(NULL);
   wcex.hIcon = LoadIconW(wcex.hInstance, MAKEINTRESOURCEW(IDI_ICON_APP));
   wcex.hIconSm = LoadIconW(wcex.hInstance, MAKEINTRESOURCEW(IDI_ICON_APP));
-  wcex.lpszClassName = L"WinMcBopomofoServerTray";
+  wcex.lpszClassName = L"JEVIMEServerTray";
   RegisterClassExW(&wcex);
 
-  hwndTray = CreateWindowExW(0, L"WinMcBopomofoServerTray", L"", WS_OVERLAPPED,
+  hwndTray = CreateWindowExW(0, L"JEVIMEServerTray", L"", WS_OVERLAPPED,
                              0, 0, 0, 0, nullptr, NULL, wcex.hInstance, NULL);
   popupController.Create(hInst);
 

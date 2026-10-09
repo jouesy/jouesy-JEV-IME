@@ -32,6 +32,7 @@
 #include <windows.h>
 
 #include "UTFHelper.h"
+#include "JevIdentity.h"
 
 namespace McBopomofo {
 namespace fcitx5_compat {
@@ -62,7 +63,7 @@ inline std::string userDirectory() {
   wchar_t path[MAX_PATH];
   if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_APPDATA, NULL, 0, path))) {
     std::filesystem::path p(path);
-    p /= "WinMcBopomofo";
+    p /= JEV::Product::kUserDirectory;
     std::filesystem::create_directories(p);
     return Utf16ToUtf8(p.wstring());
   }

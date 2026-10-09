@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <WixLocalization Culture="en-US" xmlns="http://wixtoolset.org/schemas/v4/wxl">
-  <String Id="ProductName" Value="Win-McBopomofo" />
-  <String Id="Manufacturer" Value="OpenVanilla.org" />
-  <String Id="CoreFeatureTitle" Value="Win-McBopomofo Core" />
-  <String Id="ConfigShortcutName" Value="McBopomofo Configuration" />
-  <String Id="ConfigShortcutDesc" Value="Configure Win-McBopomofo Settings" />
+  <String Id="ProductName" Value="JEV Bopomofo" />
+  <String Id="CoreFeatureTitle" Value="JEV Bopomofo Core" />
+  <String Id="ConfigShortcutName" Value="JEV Bopomofo Settings" />
+  <String Id="ConfigShortcutDesc" Value="Configure JEV Traditional Chinese input" />
   <String Id="DowngradeError" Value="A newer version of [ProductName] is already installed." />
+  <String Id="WindowsRequired" Value="JEV V0.1 requires Windows 11 x64." />
+  <String Id="ScriptInstallExists" Value="Uninstall the script-based JEV installation before installing this MSI. Your dictionary is preserved." />
 </WixLocalization>

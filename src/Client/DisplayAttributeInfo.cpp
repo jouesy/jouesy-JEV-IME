@@ -22,18 +22,11 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 
 #include "DisplayAttributeInfo.h"
+#include "JevIdentity.h"
 
-const GUID c_guidDisplayAttributeInput = {
-    0x4b688cd4,
-    0xcfb6,
-    0x4767,
-    {0xad, 0x80, 0x4d, 0x56, 0x20, 0x86, 0xfc, 0x3b}};
+const GUID c_guidDisplayAttributeInput = JEV::Product::kDisplayInputGuid;
 
-const GUID c_guidDisplayAttributeMarked = {
-    0xd82c4a26,
-    0xe0cc,
-    0x43bb,
-    {0x8c, 0xf2, 0xbb, 0xb, 0xbf, 0xf4, 0xfe, 0x70}};
+const GUID c_guidDisplayAttributeMarked = JEV::Product::kDisplayMarkedGuid;
 
 // ----------------------------------------------------------------------------
 // CDisplayAttributeInfo
@@ -151,7 +144,7 @@ STDAPI CEnumDisplayAttributeInfo::Next(ULONG ulCount,
       da.crLine.type = TF_CT_SYSCOLOR;
       da.crLine.nIndex = COLOR_WINDOWTEXT;
       rgInfo[fetched] = new CDisplayAttributeInfo(c_guidDisplayAttributeInput,
-                                                  da, L"Win-McBopomofo Input");
+                                                  da, L"JEV Bopomofo Input");
     } else if (index_ == 1) {
       TF_DISPLAYATTRIBUTE da;
       ZeroMemory(&da, sizeof(da));
@@ -161,7 +154,7 @@ STDAPI CEnumDisplayAttributeInfo::Next(ULONG ulCount,
       da.crBk.type = TF_CT_SYSCOLOR;
       da.crBk.nIndex = COLOR_HIGHLIGHT;
       rgInfo[fetched] = new CDisplayAttributeInfo(c_guidDisplayAttributeMarked,
-                                                  da, L"Win-McBopomofo Marked");
+                                                  da, L"JEV Bopomofo Marked");
     }
     if (rgInfo[fetched] == nullptr) return E_OUTOFMEMORY;
     index_++;

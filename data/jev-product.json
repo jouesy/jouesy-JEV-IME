@@ -1,0 +1,20 @@
+{
+  "name": "JEV 智慧注音",
+  "englishName": "JEV Bopomofo",
+  "version": "0.1.0",
+  "clsid": "{F8D73A29-7959-4CE0-9336-516A86A59A1B}",
+  "profileGuid": "{D0C86B61-E59B-48C4-BD47-5A68926B25AB}",
+  "upgradeCode": "{41B54828-86C0-4359-96DF-B92F35C1FDD2}",
+  "displayInputGuid": "{C9B7E416-123B-41F9-84A2-AE26E296A004}",
+  "displayMarkedGuid": "{D5579B08-4A1D-45BE-AE2D-9F5DA4358863}",
+  "switchLanguageGuid": "{DE27ED53-4191-4F72-A649-E5D92EAA07E7}",
+  "fullHalfGuid": "{73D7419B-BCDE-4223-BC80-DBEA839647F5}",
+  "settingsGuid": "{FDCB9C57-AD64-4C83-918C-E7D442653B14}",
+  "userDirectory": "JEV-IME",
+  "settingsFilename": "jev.ini",
+  "pipePrefix": "JEV_IME_v1_Session_",
+  "server": "JEVServer.exe",
+  "config": "JEVConfig.exe",
+  "tipX64": "JEVTIP_x64.dll",
+  "tipX86": "JEVTIP_x86.dll"
+}

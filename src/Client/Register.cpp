@@ -31,14 +31,9 @@
 #include "Globals.h"
 #include "UTFHelper.h"
 #include "resource.h"
+#include "JevIdentity.h"
 
-// Profile GUID for McBopomofo (Genereted a new random one)
-// {A3668853-2ED4-4D4B-A951-DE1C8B4C0A29}
-const GUID c_guidMcBopomofoProfile = {
-    0xa3668853,
-    0x2ed4,
-    0x4d4b,
-    {0xa9, 0x51, 0xde, 0x1c, 0x8b, 0x4c, 0xa, 0x29}};
+const GUID c_guidMcBopomofoProfile = JEV::Product::kProfileGuid;
 
 static const WCHAR c_szInfoKeyPrefix[] = L"CLSID\\";
 static const WCHAR c_szInProcSvr32[] = L"InProcServer32";
@@ -181,31 +176,15 @@ BOOL RegisterCategories() {
                        IID_ITfCategoryMgr, (void**)&pCategoryMgr);
   if (FAILED(hr)) return FALSE;
 
-  // Register as a Keyboard TIP
-  hr = pCategoryMgr->RegisterCategory(
-      c_clsidMcBopomofoTIP, GUID_TFCAT_TIP_KEYBOARD, c_clsidMcBopomofoTIP);
-  // Register as a Display Attribute Provider
-  if (SUCCEEDED(hr)) {
-    hr = pCategoryMgr->RegisterCategory(c_clsidMcBopomofoTIP,
-                                        GUID_TFCAT_DISPLAYATTRIBUTEPROVIDER,
-                                        c_clsidMcBopomofoTIP);
-    hr = pCategoryMgr->RegisterCategory(c_clsidMcBopomofoTIP,
-                                        GUID_TFCAT_TIPCAP_SECUREMODE,
-                                        c_clsidMcBopomofoTIP);
-    hr = pCategoryMgr->RegisterCategory(c_clsidMcBopomofoTIP,
-                                        GUID_TFCAT_TIPCAP_UIELEMENTENABLED,
-                                        c_clsidMcBopomofoTIP);
-    hr = pCategoryMgr->RegisterCategory(c_clsidMcBopomofoTIP,
-                                        GUID_TFCAT_TIPCAP_INPUTMODECOMPARTMENT,
-                                        c_clsidMcBopomofoTIP);
-    hr = pCategoryMgr->RegisterCategory(
-        c_clsidMcBopomofoTIP, GUID_TFCAT_TIPCAP_COMLESS, c_clsidMcBopomofoTIP);
-    hr = pCategoryMgr->RegisterCategory(c_clsidMcBopomofoTIP,
-                                        GUID_TFCAT_TIPCAP_SYSTRAYSUPPORT,
-                                        c_clsidMcBopomofoTIP);
-    hr = pCategoryMgr->RegisterCategory(c_clsidMcBopomofoTIP,
-                                        GUID_TFCAT_TIPCAP_IMMERSIVESUPPORT,
-                                        c_clsidMcBopomofoTIP);
+  const GUID categories[] = {
+      GUID_TFCAT_TIP_KEYBOARD, GUID_TFCAT_DISPLAYATTRIBUTEPROVIDER,
+      GUID_TFCAT_TIPCAP_SECUREMODE, GUID_TFCAT_TIPCAP_UIELEMENTENABLED,
+      GUID_TFCAT_TIPCAP_INPUTMODECOMPARTMENT, GUID_TFCAT_TIPCAP_COMLESS,
+      GUID_TFCAT_TIPCAP_SYSTRAYSUPPORT, GUID_TFCAT_TIPCAP_IMMERSIVESUPPORT};
+  for (const auto& category : categories) {
+    hr = pCategoryMgr->RegisterCategory(c_clsidMcBopomofoTIP, category,
+                                       c_clsidMcBopomofoTIP);
+    if (FAILED(hr)) break;
   }
 
   pCategoryMgr->Release();

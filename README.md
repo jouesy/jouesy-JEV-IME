@@ -1,279 +1,74 @@
-# Win-McBopomofo
+# JEV 智慧注音 — Windows 11 V0.1
 
-![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white) ![CMake](https://img.shields.io/badge/CMake-%23008FBA.svg?style=for-the-badge&logo=cmake&logoColor=white) ![Visual Studio](https://img.shields.io/badge/Visual%20Studio-5C2D91.svg?style=for-the-badge&logo=visual-studio&logoColor=white) ![Wix](https://img.shields.io/badge/wix-000?style=for-the-badge&logo=wix&logoColor=white) ![C++](https://img.shields.io/badge/c++-%2300599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white) 
+這是以 Win-McBopomofo 為基礎的原生 TSF 輸入法開發專案，提供獨立的 JEV
+識別碼、輸入法名稱、安裝流程及使用者資料夾。目標是在 Windows 11 用
+`Win + Space` 切換，並在一般應用程式中直接打字。
 
-[![Build and Test](https://github.com/openvanilla/win-mcbopomofo/actions/workflows/build.yml/badge.svg)](https://github.com/openvanilla/win-mcbopomofo/actions/workflows/build.yml)
+本次已實作原始碼修改及可重現的建置／安裝腳本，已在 Linux 編譯、驗證共用
+注音核心。**Windows 編譯、安裝與 Word／Chrome／LINE 實測尚未完成，
+目前沒有已驗證的 EXE、DLL 或 MSI 可下載。**
 
-Windows port of McBopomofo built on TSF.
+已加入 JEV 候選排序介面與測試，但 V0.1 沒有連接 Jev API，沒有錄音或
+Whisper，也没有生成式文字修正。一般注音輸入使用本機詞庫；雲端功能預設關閉。
 
-‼️ 請注意：本專案目前—不發行可安裝版本、不收外部 PR、不收 issue、沒有使用手冊、不處理任何問題回報、功能建議、社群回饋。僅提供專案原始程式碼。
+## Windows 建置及安裝
 
-‼️ 如有需要，請自行按照下方說明編譯安裝，您也可以考慮在 GitHub 上 fork 本專案之後，讓 GitHub Action 編譯。編譯完成會產生沒有簽名的安裝程式，自行安裝。
+先安裝 Visual Studio 2026 C++ 桌面工作負載、x64/x86 MSVC、Windows SDK、
+CMake 及 Python 3。原始碼 ZIP 已包含 OpenCC；若從此 JEV 專案的 Git 倉庫
+取得原始碼，請使用 `--recurse-submodules`。
 
-<!-- TOC -->
-
-- [Win-McBopomofo](#win-mcbopomofo)
-  - [System Requirements](#system-requirements)
-  - [Development Requirements](#development-requirements)
-    - [Quick Installation via Winget](#quick-installation-via-winget)
-  - [Repository Structure](#repository-structure)
-  - [Getting Started with Development](#getting-started-with-development)
-    - [1. Setup Environment](#1-setup-environment)
-    - [2. Build and Install Locally](#2-build-and-install-locally)
-    - [3. Debugging](#3-debugging)
-    - [4. Building the Installer](#4-building-the-installer)
-  - [Core Concept and Design Philosophy](#core-concept-and-design-philosophy)
-    - [Extending the Input Method](#extending-the-input-method)
-  - [Vocabulary and Language Model](#vocabulary-and-language-model)
-  - [Coding Style](#coding-style)
-    - [Git Commit Convention](#git-commit-convention)
-  - [Common Scripts](#common-scripts)
-  - [Basic Build](#basic-build)
-  - [Notes](#notes)
-  - [Windows Compatibility](#windows-compatibility)
-  - [Misc](#misc)
-    - [Registry Verification](#registry-verification)
-
-<!-- /TOC -->
-
-## System Requirements
-
-- Windows 10 or later (x64, x86, and ARM64)
-
-## Development Requirements
-
-To build this project, you need to install the following tools:
-
-- **Visual Studio 2026** (or newer) with the "Desktop development with C++" workload. Ensure you select the following individual components:
-    - MSVC v145 - VS 2026 C++ x64/x86 build tools
-    - MSVC v145 - VS 2026 C++ ARM64 build tools
-    - Windows SDK (latest version recommended)
-- **CMake** (included in Visual Studio or installed standalone)
-- **clang-format** (required for source formatting). You can install it either via Visual Studio C++ Clang tools or via standalone LLVM.
-- **WiX Toolset** (v7.0 or newer) - Required for building the `.msi` installer. Ensure the WiX binaries are added to your system `PATH`.
-
-### Quick Installation via Winget
-
-You can quickly install the base tools using Windows Package Manager (`winget`):
+在 64 位元 Developer PowerShell 執行：
 
 ```powershell
-# Install Windows Terminal (Built-in on Win11, recommended for Win10)
-winget install Microsoft.WindowsTerminal
-
-# Install Visual Studio 2026 Community
-winget install Microsoft.VisualStudio.2026.Community
-
-# Install CMake
-winget install Kitware.CMake
-
-# Install LLVM (includes clang-format for code formatting. Optional.)
-winget install LLVM.LLVM
-
-# Install WiX Toolset
-winget install wixtoolset.wix
-
-# Accept WiX v7 EULA (required for build)
-wix eula accept wix7
-
-# Install the WiX extensions required by installer/installer.wxs
-wix extension add -g WixToolset.UI.wixext/7.0.0
-wix extension add -g WixToolset.Util.wixext/7.0.0
+.\build.ps1 -Configuration Release -RunTests
 ```
 
-Verify `clang-format` is available:
+成功後，以系統管理員開啟 64 位元 PowerShell：
 
 ```powershell
-where clang-format
-clang-format --version
+.\install.ps1 -SkipBuild
 ```
 
-*Note: After installing Visual Studio via `winget`, you must open the Visual Studio Installer to manually select the "Desktop development with C++" workload and the specific ARM64 build tools.*
-
-## Repository Structure
-
-- `src/`: The core source code of the project.
-    - `src/Client/`: The TSF TIP (Text Input Processor) DLL. This is the component loaded by host applications (like Notepad).
-    - `src/Server/`: The background engine process. Handles key processing, candidate generation, state management, and the custom candidate/tooltip popup windows.
-    - `src/ConfigApp/`: The standalone configuration utility.
-    - `src/Common/`: Shared logic used by multiple components (IPC, path utilities, etc.).
-- `data/`: Runtime data files, including the language model (`data.txt`), dictionary service definitions, and bopomofo variants.
-- `installer/`: Source files for the MSI installer, including WiX definitions and localization strings (`.wxl`).
-- `docs/`: Technical documentation and guidelines (translated to English).
-- `scripts/`: Internal PowerShell and VBScript utilities for installation, uninstallation, and process management.
-- `tests/`: Unit tests and regression tests.
-- `third_party/`: External libraries including OpenCC.
-
-## Getting Started with Development
-
-### 1. Setup Environment
-
-Ensure all [Requirements](#development-requirements) are met. Run the `winget` commands to install the base tools and accept the WiX EULA.
-
-### 2. Build and Install Locally
-
-For day-to-day development, use the `install.ps1` script to build all architectures and install them to a local `dist/` folder. **Note: This script requires Administrator privileges.**
-
-Note: In an elevated PowerShell terminal:
+登出再登入，按 `Win + Space` 選擇「JEV 智慧注音」。
+建置腳本會產生 `dist/JEV-IME-0.1.0-win-x64.zip`；此路徑是將來建置的輸出，
+不是本次已產生的 Windows 二進位檔。MSI 建置使用固定版本 WiX 6.0.2：
 
 ```powershell
-.\install.ps1
+dotnet tool install --global wix --version 6.0.2
+.\build_msi.ps1 -SkipBuild
 ```
 
-This script will:
+完整安裝、啟用、驗證及解除安裝步驟見 [Windows 操作手冊](docs/windows-quickstart.md)。
 
-- Stop any running `McBopomofoServer` or `McBopomofoConfig` instances.
-- Compile the code for x64, x86, and ARM64.
-- Copy all binaries and data to the `dist/` directory.
-- Register the TSF DLLs and start the server process.
+## 本次實作
 
-### 3. Debugging
+- JEV 專用 COM CLSID、TSF profile、顯示屬性及語言列按鈕識別碼；與小麥注音
+  使用不同 exe、候選視窗類別、通訊管道、mutex 與 AppData 路徑。
+- 沿用離線注音引擎、詞庫、候選視窗及設定程式；x64 server 配合 x64/x86 TIP。
+- `build.ps1` 檢查所有建置結果、必要詞庫及 OpenCC 字典；套件附 SHA-256 manifest
+  與第三方授權。腳本安裝檢查兩種 TSF 註冊結果，可嘗試復原舊版。
+- 候選排序只排列原候選，保留讀音及 raw value；未同意、過期、錯誤、無效或
+  低信心回應均保留原排序。V0.1 不安裝 API provider。
+- Windows／Linux 建置工作流程及實測驗收表。CI 定義已加入，尚未在遠端執行。
 
-- **Tracing Logs**: The server runs in the background. To see what's happening in real-time, use the log tracer:
+## Linux 核心驗證
 
-  ```powershell
-  Get-Content -Path $env:TEMP\mcbopomofo_server.log -Wait -Tail 20
-  ```
+這個 target 只驗證共用引擎，不能註冊 Windows 輸入法。
 
-- **Settings**: You can trigger the settings app from the language bar menu or by running `dist\McBopomofoConfig.exe`.
-- **Iterative Workflow**: After making code changes, simply run `.\install.ps1` again to rebuild and re-register the components.
-
-### 4. Building the Installer
-
-To generate the final MSI installer, run:
-
-```powershell
-.\build_msi.ps1
+```bash
+cmake -S . -B build_portable -DJEV_PORTABLE_ONLY=ON -DCMAKE_BUILD_TYPE=Release
+cmake --build build_portable --parallel
+ctest --test-dir build_portable --output-on-failure
 ```
 
-The output will be located in `dist/Win-McBopomofo-Installer.msi`.
+若安裝了 PowerShell 7，CTest 也會執行套件完整性測試；可獨立執行
+`pwsh -NoProfile -File tests/JevPackageTest.ps1`。
 
-The installer build uses WiX v7 with these extensions:
+[架構與 API 邊界](docs/jev-architecture.md) ·
+[Windows 驗收表](docs/windows-validation.md) ·
+[本次驗證紀錄](docs/verification.md) ·
+[來源與授權](NOTICE.md)
 
-- `WixToolset.UI.wixext/7.0.0`
-- `WixToolset.Util.wixext/7.0.0`
-
-`build_msi.ps1` installs the extensions automatically, but WiX v7 still requires the EULA to be accepted once per user before the extension cache can be used:
-
-```powershell
-wix eula accept wix7
-```
-
-## Core Concept and Design Philosophy
-
-Win-McBopomofo is a **state-driven** input method. The system is designed as a pipeline that transforms raw user input into a visual representation through clearly defined states.
-
-The data flow follows this sequence:
-
-1. **Windows Virtual Key**: The OS sends a raw key event (VK code) to the Client DLL.
-2. **Abstract Key + State**: The Client maps the VK code to an internal `Key` structure and sends it to the Server. The Server combines this key with the current `InputState`.
-3. **New State**: The `KeyHandler` logic processes the input and produces a **new logical state** (e.g., transitioning from `Empty` to `Inputting`, or `Inputting` to `ChoosingCandidate`).
-4. **New UI State**: The Server projects this internal logical state into a `StateUpdatePayload` (UI state), which is a simplified representation designed for display.
-5. **UI**: The Client receives the payload and applies TSF composition/commit updates inside the host process. For candidate UI, the Client first publishes data through the TSF UIElement path; when a custom popup is needed, it sends layout data to the Server, and the Server renders and positions the Candidate Window and Tooltip Window.
-
-This architecture decouples the complex Windows TSF/Win32 APIs from the core input method logic, making the system easier to test, debug, and extend.
-
-### Extending the Input Method
-
-To add new features or input modes (like the current Big5 or ICU transform modes), you should design and implement new states. The typical workflow is:
-
-1. **Update `InputState.h`**: Define a new struct that inherits from `InputState` (or `NotEmpty` if it has a composing buffer).
-2. **Update `KeyHandler`**: Implement the logic to enter this new state via the `stateCallback`. Add logic in `KeyHandler::handle` (or a specific handler method) to process keys while in this state.
-3. **Update `InputController`**: Update `buildStateUpdatePayload_` to project your new logical state into the appropriate UI state (composition, candidates, tooltips, etc.) for the Client and Server UI pipeline to apply.
-
-## Vocabulary and Language Model
-
-The vocabulary and language model data for Win-McBopomofo are derived from the [upstream macOS McBopomofo project](https://github.com/openvanilla/McBopomofo).
-
-**Please report any issues regarding vocabulary, word frequencies, or bopomofo readings to the macOS version's repository.**
-
-Because the data tables are shared across platforms, if you plan to implement new features related to data tables or language models, it is highly recommended to develop them in the macOS version first and then port them to other platforms.
-
-## Coding Style
-
-This project follows a consistent coding style enforced by `clang-format`.
-
-- **Configuration**: See `.clang-format` in the root directory.
-- **Requirement**: Please ensure your code is formatted correctly before sharing or maintaining your own fork.
-- **Formatting Command**:
-
-  ```powershell
-  # Format all C++ files in the src directory
-  Get-ChildItem -Path src -Include *.cpp,*.h -Recurse | ForEach-Object { clang-format -i $_.FullName }
-  ```
-
-### Git Commit Convention
-
-This project uses [Conventional Commits](https://www.conventionalcommits.org/).
-
-- **Format**: `<type>(optional scope): <description>`
-- **Common Types**:
-    - `feat`: A new feature
-    - `fix`: A bug fix
-    - `docs`: Documentation only changes
-    - `style`: Changes that do not affect the meaning of the code (white-space, formatting, etc.)
-    - `refactor`: A code change that neither fixes a bug nor adds a feature
-    - `chore`: Updating build tasks, package manager configs, etc.
-
-## Common Scripts
-
-- `install.ps1`: developer-oriented build and local staging flow
-- `build_msi.ps1`: build the MSI installer
-- `scripts/setup.ps1`: install a staged build to a target directory
-- `scripts/uninstall.ps1`: unregister and remove an installed build
-
-See [scripts/README.md](scripts/README.md) for script details.
-
-## Basic Build
-
-Example:
-
-```powershell
-cmake -S . -B build_verify -A x64
-cmake --build build_verify --config Release
-```
-
-Important outputs are usually placed under:
-
-- `build_verify/bin/Release/`
-- `dist/`
-
-## Notes
-
-- The project uses Windows TSF and includes both TIP client and background server components.
-- Some install and registration flows require Administrator privileges.
-
-## Windows Compatibility
-
-- **Supported OS**: Windows 10 and later (x64, x86, and ARM64).
-- **Installer policy**: The MSI installer is configured to block installation on versions older than Windows 10.
-- **Note**: While the core logic uses standard Win32 and TSF APIs, older versions (like Windows 7 or 8) are not supported and may experience issues with high-DPI scaling, modern UI themes, or TSF host integration.
-
-## Misc
-
-### Registry Verification
-
-You can use the following commands in PowerShell to verify the installation and registration:
-
-- **Get the installed DLL path (COM Registration):**
-
-  ```powershell
-  reg query "HKCR\CLSID\{8C9D652A-9B99-4B77-BA9A-3B0F76923B7B}\InProcServer32" /ve
-  ```
-
-- **Verify TSF Language Profile (Traditional Chinese):**
-
-  ```powershell
-  reg query "HKLM\SOFTWARE\Microsoft\CTF\TIP\{8C9D652A-9B99-4B77-BA9A-3B0F76923B7B}\LanguageProfile\0x0404\{A3668853-2ED4-4D4B-A951-DE1C8B4C0A29}"
-  ```
-
-- **Check Server Autorun Entry:**
-
-  ```powershell
-  reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v "Win-McBopomofo-Server"
-  ```
-
-- **Verify TIP Categories (Immersive Support, etc.):**
-
-  ```powershell
-  reg query "HKLM\SOFTWARE\Microsoft\CTF\TIP\{8C9D652A-9B99-4B77-BA9A-3B0F76923B7B}\Category\Category\{534C48C1-063E-406F-8F50-F77617E46C9C}\{8C9D652A-9B99-4B77-BA9A-3B0F76923B7B}"
-  ```
+上游技術文件保留於 `docs/`，原版 README 保存於 `docs/upstream/README.md`。
+其原始產品名稱、腳本或 ARM64 說明僅供上游參考；JEV 操作以本 README 及
+Windows 操作手冊為準。

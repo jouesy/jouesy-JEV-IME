@@ -53,7 +53,7 @@ if(MSVC)
 endif()
 
 # Server executable
-add_executable(McBopomofoServer 
+add_executable(JEVServer
     ../Client/Globals.cpp
     CandidateWindow.cpp
     main.cpp
@@ -68,7 +68,7 @@ add_executable(McBopomofoServer
     SettingsApp.cpp
     TooltipWindow.cpp
 )
-set_target_properties(McBopomofoServer PROPERTIES WIN32_EXECUTABLE TRUE)
-target_include_directories(McBopomofoServer PRIVATE ${CMAKE_SOURCE_DIR}/src/Client ${CMAKE_SOURCE_DIR}/third_party/OpenCC/src ${WINMCBOPOMOFO_GENERATED_DIR})
-target_compile_definitions(McBopomofoServer PRIVATE WINMCBOPOMOFO_SERVER_SIDE_POPUP)
-target_link_libraries(McBopomofoServer PRIVATE McBopomofoEngine Common libopencc dwmapi d2d1 dwrite windowsapp icuuc icuin)
+set_target_properties(JEVServer PROPERTIES WIN32_EXECUTABLE TRUE)
+target_include_directories(JEVServer PRIVATE ${CMAKE_SOURCE_DIR}/src/Client ${CMAKE_SOURCE_DIR}/third_party/OpenCC/src ${WINMCBOPOMOFO_GENERATED_DIR})
+target_compile_definitions(JEVServer PRIVATE WINMCBOPOMOFO_SERVER_SIDE_POPUP)
+target_link_libraries(JEVServer PRIVATE McBopomofoEngine Common JevRanking libopencc dwmapi d2d1 dwrite windowsapp icuuc icuin)

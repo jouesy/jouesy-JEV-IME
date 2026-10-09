@@ -24,13 +24,13 @@ BEGIN
         BLOCK "040904E4"
         BEGIN
             VALUE "Comments", "MIT License"
-            VALUE "CompanyName", "OpenVanilla.org"
-            VALUE "FileDescription", "Win-McBopomofo Text Service"
+            VALUE "CompanyName", "JEV"
+            VALUE "FileDescription", "JEV Bopomofo Text Service"
             VALUE "FileVersion", WINMCBOPOMOFO_VERSION_STR
-            VALUE "InternalName", "McBopomofoTIP_v2"
+            VALUE "InternalName", "JEVTIP"
             VALUE "LegalCopyright", "McBopomofo Authors. All rights reserved."
-            VALUE "OriginalFilename", "McBopomofoTIP_v2.dll"
-            VALUE "ProductName", "Win-McBopomofo"
+            VALUE "OriginalFilename", "JEVTIP.dll"
+            VALUE "ProductName", "JEV Bopomofo"
             VALUE "ProductVersion", WINMCBOPOMOFO_VERSION_STR
         END
     END
@@ -58,7 +58,7 @@ BEGIN
     IDS_EDIT_EXCLUDED_PHRASES      "Edit Excluded Phrases"
     IDS_OPEN_USER_DATA_FOLDER      "Open User Data Folder"
     IDS_IME_MODE_TOOLTIP           "Chinese/Simplified/English Mode"
-    IDS_WIN_MCBOPOMOFO             "McBopomofo"
+    IDS_WIN_MCBOPOMOFO             "JEV Bopomofo"
 END
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -77,5 +77,5 @@ BEGIN
     IDS_EDIT_EXCLUDED_PHRASES      "編輯排除詞庫"
     IDS_OPEN_USER_DATA_FOLDER      "開啟使用者資料夾"
     IDS_IME_MODE_TOOLTIP           "中/簡/英文模式"
-    IDS_WIN_MCBOPOMOFO             "小麥注音"
+    IDS_WIN_MCBOPOMOFO             "JEV 智慧注音"
 END

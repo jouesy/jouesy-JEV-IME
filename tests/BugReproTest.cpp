@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <memory>
+#include <stdexcept>
 
 #include "InputController.h"
 #include "KeyHandler.h"
@@ -329,6 +330,83 @@ _punctuation_, ， -1.0
 
   EXPECT_EQ(errorCount, 0);
   EXPECT_GE(stateCount, 1);
+}
+
+// JEV controller integration checks run on Windows with the real key handler.
+class JevCachedTestProvider : public JEV::CandidateScoreProvider {
+ public:
+  enum class Result { Good, Stale, Throw };
+  explicit JevCachedTestProvider(Result result = Result::Good) : result_(result) {}
+  mutable int calls = 0;
+  std::optional<JEV::RankResponse> lookup(const JEV::RankRequest& request) const override {
+    ++calls;
+    if (result_ == Result::Throw) throw std::runtime_error("provider failed");
+    JEV::RankResponse reply{request, {}};
+    for (const auto& candidate : request.candidates)
+      reply.scores.push_back({candidate.id, candidate.text == "明" ? 0.9 : 0.05});
+    if (result_ == Result::Stale) --reply.request.generation;
+    return reply;
+  }
+ private:
+  Result result_;
+};
+
+static void LoadJevControllerFixture(const std::shared_ptr<McBopomofoLM>& lm,
+                                     InputController& controller) {
+  static constexpr char data[] = "# format org.openvanilla.mcbopomofo.sorted\n"
+                         "ㄇㄧㄥˊ 名 -1.0\nㄇㄧㄥˊ 明 -2.0\nㄇㄧㄥˊ 銘 -3.0\n";
+  lm->loadLanguageModel(std::make_unique<ParselessPhraseDB>(data, sizeof(data) - 1));
+  controller.setChineseConversionEnabled(false);
+  controller.setAssociatedPhrasesEnabled(false);
+  controller.setKeyboardLayout(Formosa::Mandarin::BopomofoKeyboardLayout::StandardLayout());
+  for (char key : std::string("au/6")) controller.handleKey(Key::asciiKey(key));
+  controller.handleKey(Key::namedKey(Key::KeyName::DOWN));
+}
+
+TEST_F(BugReproTest, JevRankedSelectionPreservesEngineReadingAndRawValue) {
+  auto provider = std::make_shared<JevCachedTestProvider>();
+  controller->setCandidateRanking({true, true, 0.65, 0.10}, provider);
+  LoadJevControllerFixture(lm, *controller);
+  auto* choosing = dynamic_cast<InputStates::ChoosingCandidate*>(controller->currentState());
+  ASSERT_NE(choosing, nullptr);
+  ASSERT_GE(choosing->candidates.size(), 2u);
+  EXPECT_EQ(choosing->candidates[0].value, "明");
+  EXPECT_EQ(choosing->candidates[0].reading, "ㄇㄧㄥˊ");
+  EXPECT_EQ(choosing->candidates[0].rawValue, "明");
+  ASSERT_FALSE(ui->lastState.candidates.empty());
+  EXPECT_EQ(ui->lastState.candidates[0], "明");
+  controller->handleKey(Key::asciiKey('1'));
+  controller->handleKey(Key::asciiKey(Key::RETURN));
+  EXPECT_EQ(ui->committedString, "明");
+  EXPECT_EQ(provider->calls, 1);
+}
+
+TEST_F(BugReproTest, JevNoConsentNeverInvokesProvider) {
+  auto provider = std::make_shared<JevCachedTestProvider>();
+  controller->setCandidateRanking({true, false, 0.65, 0.10}, provider);
+  LoadJevControllerFixture(lm, *controller);
+  ASSERT_FALSE(ui->lastState.candidates.empty());
+  EXPECT_EQ(ui->lastState.candidates[0], "名");
+  EXPECT_EQ(provider->calls, 0);
+}
+
+TEST_F(BugReproTest, JevStaleCachePreservesOriginalChoice) {
+  auto provider = std::make_shared<JevCachedTestProvider>(JevCachedTestProvider::Result::Stale);
+  controller->setCandidateRanking({true, true, 0.65, 0.10}, provider);
+  LoadJevControllerFixture(lm, *controller);
+  ASSERT_FALSE(ui->lastState.candidates.empty());
+  EXPECT_EQ(ui->lastState.candidates[0], "名");
+}
+
+TEST_F(BugReproTest, JevProviderExceptionDoesNotBreakTyping) {
+  auto provider = std::make_shared<JevCachedTestProvider>(JevCachedTestProvider::Result::Throw);
+  controller->setCandidateRanking({true, true, 0.65, 0.10}, provider);
+  EXPECT_NO_THROW(LoadJevControllerFixture(lm, *controller));
+  ASSERT_FALSE(ui->lastState.candidates.empty());
+  EXPECT_EQ(ui->lastState.candidates[0], "名");
+  controller->handleKey(Key::asciiKey('1'));
+  controller->handleKey(Key::asciiKey(Key::RETURN));
+  EXPECT_EQ(ui->committedString, "名");
 }
 
 int main(int argc, char** argv) {

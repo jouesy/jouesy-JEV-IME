@@ -28,6 +28,7 @@
 #include "InputState.h"
 #include "KeyHandler.h"
 #include "UIInterface.h"
+#include "CandidateRanker.h"
 
 namespace McBopomofo {
 
@@ -82,6 +83,14 @@ class InputController {
   void setBeepOnError(bool enabled) { beepOnError_ = enabled; }
   void refreshUI();
 
+  // V0.1 installs no provider and leaves this disabled. Future API workers
+  // supply cached scores here after an explicit cloud-consent settings flow.
+  void setCandidateRanking(JEV::RankingPolicy policy,
+                          std::shared_ptr<const JEV::CandidateScoreProvider> provider) {
+    rankingPolicy_ = policy;
+    scoreProvider_ = std::move(provider);
+  }
+
   void setDataDirectory(const std::filesystem::path& dataDir);
   void toggleChineseConversion();
   bool isChineseConversionEnabled() const;
@@ -121,6 +130,9 @@ class InputController {
   int candidateFontSize_ = 16;
   IPC::CandidateWindowColors candidateWindowColors_;
   bool beepOnError_ = true;
+  JEV::RankingPolicy rankingPolicy_;
+  std::shared_ptr<const JEV::CandidateScoreProvider> scoreProvider_;
+  std::uint64_t rankGeneration_ = 0;
 
   std::unique_ptr<opencc::SimpleConverter> openccConverter_;
   std::unique_ptr<LocalizedStrings> localizedStrings_;

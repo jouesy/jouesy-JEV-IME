@@ -22,13 +22,13 @@ BEGIN
         BLOCK "040904E4"
         BEGIN
             VALUE "Comments", "MIT License"
-            VALUE "CompanyName", "OpenVanilla.org"
-            VALUE "FileDescription", "Win-McBopomofo Server"
+            VALUE "CompanyName", "JEV"
+            VALUE "FileDescription", "JEV Bopomofo Server"
             VALUE "FileVersion", WINMCBOPOMOFO_VERSION_STR
-            VALUE "InternalName", "McBopomofoServer"
+            VALUE "InternalName", "JEVServer"
             VALUE "LegalCopyright", "McBopomofo Authors. All rights reserved."
-            VALUE "OriginalFilename", "McBopomofoServer.exe"
-            VALUE "ProductName", "Win-McBopomofo"
+            VALUE "OriginalFilename", "JEVServer.exe"
+            VALUE "ProductName", "JEV Bopomofo"
             VALUE "ProductVersion", WINMCBOPOMOFO_VERSION_STR
         END
     END
@@ -52,8 +52,8 @@ BEGIN
     IDS_TRACE_LOG                  "Trace Log"
     IDS_RESTART_SERVER             "Restart Server"
     IDS_STOP_SERVER                "Stop Server"
-    IDS_TRAY_TIP                   "Win-McBopomofo Server"
-    IDS_DAEMON_STARTING            "Win-McBopomofo Server daemon starting..."
+    IDS_TRAY_TIP                   "JEV Bopomofo Server"
+    IDS_DAEMON_STARTING            "JEV Bopomofo Server daemon starting..."
     IDS_SERVER_RUNNING             "Server is running in background. Check System Tray to exit."
     IDS_CURSOR_BETWEEN_SYLLABLES   "Cursor between %s and %s"
     IDS_SYLLABLES_REQUIRED         "%d syllables required"
@@ -85,8 +85,8 @@ BEGIN
     IDS_TRACE_LOG                  "Trace Log"
     IDS_RESTART_SERVER             "重新啟動 Server"
     IDS_STOP_SERVER                "停止 Server"
-    IDS_TRAY_TIP                   "小麥注音 Server"
-    IDS_DAEMON_STARTING            "小麥注音 Server 啟動中..."
+    IDS_TRAY_TIP                   "JEV 智慧注音 Server"
+    IDS_DAEMON_STARTING            "JEV 智慧注音 Server 啟動中..."
     IDS_SERVER_RUNNING             "Server 正在背景執行，請檢查系統匣圖示。"
     IDS_CURSOR_BETWEEN_SYLLABLES   "游標在 %s 與 %s 之間"
     IDS_SYLLABLES_REQUIRED         "最少需要 %d 個字"
@@ -101,7 +101,7 @@ BEGIN
     IDS_CANCEL                     "取消"
     IDS_BOOST_PROMPT               "您想要提昇這個詞的權重嗎？"
     IDS_EXCLUDE_PROMPT             "您想要排除這個詞嗎？"
-    IDS_USER_PHRASE_FILE_HEADER    "# 手動加詞資料檔\n# 使用方式請參考 https://github.com/openvanilla/McBopomofo/wiki/使用手冊#手動加詞\n# 請在下方加入用戶自訂字詞。每個詞後面要有字詞的讀音。注音音節之間要用減\n# 號 (""-"") 分隔。例如，以下範例加入「小麥注音」一詞：\n# 如果任何一行以 ""#"" 開頭，該行將被當作註解忽略。\n"
+    IDS_USER_PHRASE_FILE_HEADER    "# 手動加詞資料檔\n# 使用方式請參考 https://github.com/openvanilla/McBopomofo/wiki/使用手冊#手動加詞\n# 請在下方加入用戶自訂字詞。每個詞後面要有字詞的讀音。注音音節之間要用減\n# 號 (""-"") 分隔。例如，以下範例加入「JEV 智慧注音」一詞：\n# 如果任何一行以 ""#"" 開頭，該行將被當作註解忽略。\n"
     IDS_EXCLUDED_PHRASE_FILE_HEADER "# 手動刪詞資料檔\n# 使用方式請參考 https://github.com/openvanilla/McBopomofo/wiki/使用手冊#手動刪詞\n# 如果將下面這行範例加入資料檔中，輸入 ""ㄐㄧㄚ ㄘˊ"" 時不會再看到「家祠」一詞：\n# 請注意，注音音節之間要用減號 (""-"") 分隔。\n"
     IDS_CHARACTER_INFORMATION      "字元資訊"
 END

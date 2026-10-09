@@ -27,14 +27,10 @@
 #include "Globals.h"
 #include "McBopomofoTIP.h"
 #include "Register.h"
+#include "JevIdentity.h"
 
-// The actual generated CLSID
-// {8C9D652A-9B99-4B77-BA9A-3B0F76923B7B}
-const CLSID c_clsidMcBopomofoTIP = {
-    0x8c9d652a,
-    0x9b99,
-    0x4b77,
-    {0xba, 0x9a, 0x3b, 0xf, 0x76, 0x92, 0x3b, 0x7b}};
+// Keep the upstream symbol name, with an independent JEV COM identity.
+const CLSID c_clsidMcBopomofoTIP = JEV::Product::kTipClsid;
 
 HINSTANCE g_hInst = nullptr;
 LONG g_cRefDll = 0;
@@ -137,8 +133,12 @@ STDAPI DllCanUnloadNow() { return (g_cRefDll == 0) ? S_OK : S_FALSE; }
 STDAPI DllRegisterServer() {
   UnregisterProfiles();
   if (!RegisterServer()) return E_FAIL;
-  if (!RegisterProfiles()) return E_FAIL;
-  if (!RegisterCategories()) return E_FAIL;
+  if (!RegisterProfiles() || !RegisterCategories()) {
+    UnregisterCategories();
+    UnregisterProfiles();
+    UnregisterServer();
+    return E_FAIL;
+  }
   return S_OK;
 }
 

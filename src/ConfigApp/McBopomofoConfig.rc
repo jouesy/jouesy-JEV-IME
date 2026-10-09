@@ -3,6 +3,7 @@
 #pragma code_page(65001)
 
 #include "resource.h"
+#include "WinMcBopomofoVersion.rcinc"
 /////////////////////////////////////////////////////////////////////////////
 // Chinese (Traditional, Taiwan) resources
 
@@ -16,7 +17,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    IDS_CONFIG_TITLE        "小麥注音偏好設定"
+    IDS_CONFIG_TITLE        "JEV 智慧注音偏好設定"
     IDS_RELOAD              "重新載入"
     IDS_KEYBOARD_LAYOUT     "鍵盤佈局"
     IDS_INPUT_MODE          "輸入模式"
@@ -53,7 +54,7 @@ BEGIN
     IDS_LAYOUT_ETEN26       "倚天 26 鍵"
     IDS_LAYOUT_HANYUPINYIN  "漢語拼音"
     IDS_LAYOUT_IBM          "IBM"
-    IDS_MODE_MCBOPOMOFO     "小麥注音"
+    IDS_MODE_MCBOPOMOFO     "JEV 智慧注音"
     IDS_MODE_PLAIN_BOPOMOFO "普通注音"
     IDS_CTRL_ENTER_DISABLED "不作用"
     IDS_CTRL_ENTER_BPMF_READING "輸出注音讀音"
@@ -72,9 +73,9 @@ BEGIN
     IDS_SHIFT_TOGGLE        "Shift"
     IDS_SHIFT_TOGGLE_OPEN_CLOSE "使用 Shift 切換中英文"
     IDS_ERROR_BEEP          "錯誤時發出嗶聲"
-    IDS_MANUAL_LINK         "小麥注音使用手冊"
-    IDS_PROJECT_HOMEPAGE    "專案首頁"
-    IDS_MODE_MCBOPOMOFO_AUTO "小麥注音（自動選字）"
+    IDS_MANUAL_LINK         "注音引擎使用手冊"
+    IDS_PROJECT_HOMEPAGE    "上游專案首頁"
+    IDS_MODE_MCBOPOMOFO_AUTO "JEV 智慧注音（自動選字）"
     IDS_MODE_PLAIN_BOPOMOFO_MANUAL "傳統注音（手動選字）"
     IDS_SHIFT_LETTER        "Shift + 字母"
     IDS_CTRL_ENTER_TAIWAN_BRAILLE_UNICODE "輸出台灣點字 Unicode"
@@ -107,8 +108,8 @@ IDI_ICON_APP            ICON                    "..\\Client\\res\\app.ico"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,0
- PRODUCTVERSION 1,0,0,0
+ FILEVERSION WINMCBOPOMOFO_VERSION_NUM
+ PRODUCTVERSION WINMCBOPOMOFO_VERSION_NUM
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -124,14 +125,14 @@ BEGIN
         BLOCK "040904E4"
         BEGIN
             VALUE "Comments", "MIT License"
-            VALUE "CompanyName", "OpenVanilla.org"
-            VALUE "FileDescription", "Win-McBopomofo Configuration"
-            VALUE "FileVersion", "1.0.0.0"
-            VALUE "InternalName", "McBopomofoConfig"
+            VALUE "CompanyName", "JEV"
+            VALUE "FileDescription", "JEV Bopomofo Configuration"
+            VALUE "FileVersion", WINMCBOPOMOFO_VERSION_STR
+            VALUE "InternalName", "JEVConfig"
             VALUE "LegalCopyright", "McBopomofo Authors. All rights reserved."
-            VALUE "OriginalFilename", "McBopomofoConfig.exe"
-            VALUE "ProductName", "Win-McBopomofo"
-            VALUE "ProductVersion", "1.0.0.0"
+            VALUE "OriginalFilename", "JEVConfig.exe"
+            VALUE "ProductName", "JEV Bopomofo"
+            VALUE "ProductVersion", WINMCBOPOMOFO_VERSION_STR
         END
     END
     BLOCK "VarFileInfo"
@@ -149,7 +150,7 @@ END
 IDD_CONFIG_DIALOG DIALOGEX 0, 0, 280, 342
 STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_CAPTION | WS_VSCROLL | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_CONTROLPARENT
-CAPTION "Win-McBopomofo Configuration"
+CAPTION "JEV Bopomofo Configuration"
 FONT 9, "Segoe UI", 0, 0, 0x1
 BEGIN
     PUSHBUTTON      "Reload",IDC_RELOAD_BUTTON,89,314,46,12
@@ -197,7 +198,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,91,256,138,10
     LTEXT           "Error",IDC_ERROR_BEEP_LABEL,9,272,62,10
     CONTROL         "Beep on error",IDC_ERROR_BEEP_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,91,270,80,10
-    LTEXT           "McBopomofo User Manual",IDC_MANUAL_LINK,91,285,110,10,SS_NOTIFY | NOT WS_GROUP
+    LTEXT           "Bopomofo Engine User Manual",IDC_MANUAL_LINK,91,285,110,10,SS_NOTIFY | NOT WS_GROUP
     LTEXT           "Project Homepage",IDC_PROJECT_HOMEPAGE_LINK,91,296,90,10,SS_NOTIFY | NOT WS_GROUP
 END
 
@@ -208,17 +209,17 @@ END
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE 
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE 
+2 TEXTINCLUDE
 BEGIN
     "\0"
 END
 
-3 TEXTINCLUDE 
+3 TEXTINCLUDE
 BEGIN
     "\r\n"
     "\0"
@@ -262,7 +263,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CONFIG_TITLE        "Win-McBopomofo Configuration"
+    IDS_CONFIG_TITLE        "JEV Bopomofo Configuration"
     IDS_RELOAD              "Reload"
     IDS_KEYBOARD_LAYOUT     "Keyboard Layout"
     IDS_INPUT_MODE          "Input Mode"
@@ -299,7 +300,7 @@ BEGIN
     IDS_LAYOUT_ETEN26       "ETen 26"
     IDS_LAYOUT_HANYUPINYIN  "Hanyu Pinyin"
     IDS_LAYOUT_IBM          "IBM"
-    IDS_MODE_MCBOPOMOFO     "McBopomofo"
+    IDS_MODE_MCBOPOMOFO     "JEV Bopomofo"
     IDS_MODE_PLAIN_BOPOMOFO "Plain Bopomofo"
     IDS_CTRL_ENTER_DISABLED "Disabled"
     IDS_CTRL_ENTER_BPMF_READING "Output Bopomofo Readings"
@@ -318,9 +319,9 @@ BEGIN
     IDS_SHIFT_TOGGLE        "Shift"
     IDS_SHIFT_TOGGLE_OPEN_CLOSE "Use Shift to switch Chinese / English"
     IDS_ERROR_BEEP          "Beep on error"
-    IDS_MANUAL_LINK         "McBopomofo User Manual"
-    IDS_PROJECT_HOMEPAGE    "Project Homepage"
-    IDS_MODE_MCBOPOMOFO_AUTO "McBopomofo (Auto-select)"
+    IDS_MANUAL_LINK         "Bopomofo Engine User Manual"
+    IDS_PROJECT_HOMEPAGE    "Upstream Project"
+    IDS_MODE_MCBOPOMOFO_AUTO "JEV Bopomofo (Auto-select)"
     IDS_MODE_PLAIN_BOPOMOFO_MANUAL "Traditional Bopomofo (Manual-select)"
     IDS_SHIFT_LETTER        "Shift + Letter"
     IDS_CTRL_ENTER_TAIWAN_BRAILLE_UNICODE "Output Taiwanese Braille Unicode"

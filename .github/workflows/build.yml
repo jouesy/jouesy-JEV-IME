@@ -1,57 +1,55 @@
-name: Build and Test
+name: JEV Build and Test
 
 on:
   push:
-    branches: [main]
   pull_request:
-    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  build:
-    runs-on: windows-latest
-
+  portable:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v4
+      - name: Configure offline engine checks
+        run: cmake -S . -B build_portable -DJEV_PORTABLE_ONLY=ON -DCMAKE_BUILD_TYPE=Release
+      - name: Build and test
+        run: |
+          cmake --build build_portable --parallel 4
+          ctest --test-dir build_portable --output-on-failure
+      - name: Package integrity checks
+        shell: pwsh
+        run: ./tests/JevPackageTest.ps1
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
-
-      - name: Configure CMake
-        run: cmake -B build -S . -A x64
-
-      - name: Build
-        run: cmake --build build --config Debug
-
-      - name: Install OpenCppCoverage
-        run: |
-          choco install opencppcoverage -y
-          echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
-
-      - name: Run Tests with Code Coverage
-        run: |
-          OpenCppCoverage.exe --sources src --export_type cobertura:coverage.xml --cover_children -- ctest.exe --test-dir build -C Debug --output-on-failure
-
-      - name: Upload Coverage to Codecov
-        uses: codecov/codecov-action@v5
+      - uses: actions/setup-python@v5
         with:
-          files: ./coverage.xml
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Install WiX Toolset
-        run: |
-          winget install --id WiXToolset.WiXCLI --accept-package-agreements --accept-source-agreements
-          $env:Path += ";C:\Program Files\WiX Toolset v7.0\bin"
-          wix eula accept wix7
-
-      - name: Build MSI Installer
-        run: .\build_msi.ps1
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v7
+          python-version: '3.13'
+      - uses: actions/setup-dotnet@v4
         with:
-          name: Win-McBopomofo-Release
+          dotnet-version: '8.0.x'
+      - name: Build native x64 and x86 and run regression tests
+        shell: pwsh
+        run: ./build.ps1 -Configuration Release -RunTests
+      - name: Install pinned WiX
+        shell: pwsh
+        run: dotnet tool install --global wix --version 6.0.2
+      - name: Build MSI
+        shell: pwsh
+        run: |
+          $env:Path += ";$env:USERPROFILE\.dotnet\tools"
+          ./build_msi.ps1 -SkipBuild
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JEV-IME-0.1.0-win-x64
           path: |
-            dist/Win-McBopomofo-Installer.msi
-            # build/bin/Release/*.exe
-            # build/bin/Release/*.dll
+            dist/JEV-IME-0.1.0-win-x64.zip
+            dist/JEV-IME-0.1.0-win-x64.msi
+          if-no-files-found: error

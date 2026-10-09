@@ -1,158 +1,71 @@
-# PowerShell script to install Win-McBopomofo
-
-$repoRoot = Split-Path $PSScriptRoot -Parent
-
-function Get-IcaclsPath {
-    $candidates = @(
-        (Join-Path $env:SystemRoot "Sysnative\icacls.exe"),
-        (Join-Path $env:SystemRoot "System32\icacls.exe"),
-        (Join-Path $env:SystemRoot "SysWOW64\icacls.exe")
-    )
-
-    foreach ($candidate in $candidates) {
-        if (Test-Path $candidate) {
-            return $candidate
-        }
+# Copyright (c) 2026 JEV contributors. SPDX-License-Identifier: MIT
+[CmdletBinding()]
+param([string]$SourceDir = '', [string]$InstallRoot = "$env:ProgramFiles\JEV-IME")
+. (Join-Path $PSScriptRoot 'WindowsHelpers.ps1')
+Assert-JevWindowsX64 -RequireAdmin
+if (-not $SourceDir) {
+    $repoRoot = Split-Path $PSScriptRoot -Parent
+    $product = Get-Content (Join-Path $repoRoot 'data/jev-product.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+    $SourceDir = Join-Path $repoRoot "dist/JEV-IME-$($product.version)-win-x64"
+}
+$SourceDir = (Resolve-Path -LiteralPath $SourceDir).Path
+$manifest = Test-JevPackage $SourceDir
+$key = 'HKLM:\SOFTWARE\JEV-IME'
+$runKey = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run'
+$previous = Get-ItemProperty -LiteralPath $key -ErrorAction SilentlyContinue
+$previousDirectory = $null
+if ($previous) {
+    if ($previous.PSObject.Properties['InstallationType'] -and $previous.InstallationType -eq 'MSI') {
+        throw 'An MSI installation exists. Upgrade it with the JEV MSI installer.'
     }
-
-    $command = Get-Command "icacls.exe" -ErrorAction SilentlyContinue
-    if ($command) {
-        return $command.Source
-    }
-
-    return $null
+    if ($previous.PSObject.Properties['InstallDir']) { $previousDirectory = $previous.InstallDir }
 }
-
-function Grant-AppContainerReadAccess {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$Path
-    )
-
-    $icaclsPath = Get-IcaclsPath
-    if (!$icaclsPath) {
-        Write-Error "icacls.exe was not found. Cannot grant AppContainer permissions to '$Path'."
-        Exit 1
-    }
-
-    & $icaclsPath $Path /grant "ALL APPLICATION PACKAGES:(OI)(CI)(RX)" /T /Q
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "Failed to grant AppContainer permissions to '$Path' using '$icaclsPath'."
-        Exit $LASTEXITCODE
-    }
+$oldRun = Get-ItemProperty -LiteralPath $runKey -ErrorAction SilentlyContinue
+$oldRunValue = $null
+if ($oldRun -and $oldRun.PSObject.Properties['JEV-IME-Server']) { $oldRunValue = $oldRun.'JEV-IME-Server' }
+# A new version directory avoids overwriting DLLs still loaded by applications.
+$stamp = [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss-fff')
+$target = Join-Path $InstallRoot "$($manifest.version)-$stamp"
+New-Item -ItemType Directory -Path $target -Force | Out-Null
+Get-ChildItem -LiteralPath $SourceDir -Force | ForEach-Object {
+    Copy-Item -LiteralPath $_.FullName -Destination $target -Recurse -Force
 }
-
-# Requires Admin privileges
-if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Write-Warning "Please run this script as Administrator."
-    Exit
-}
-
-$DefaultInstallDir = "$env:ProgramFiles\McBopomofo"
-$installDir = Read-Host "Enter installation directory [$DefaultInstallDir]"
-if ([string]::IsNullOrWhiteSpace($installDir)) {
-    $installDir = $DefaultInstallDir
-}
-
-# Ensure we have the necessary source files in 'dist' or 'build'
-# For now, we assume files are in 'dist' as prepared by a build process.
-$sourceDir = Join-Path $repoRoot "dist"
-if (!(Test-Path $sourceDir)) {
-    Write-Error "Source directory '$sourceDir' not found. Please build the project first or ensure 'dist' folder exists."
-    Exit
-}
-
-Write-Host "`n1. Stopping existing McBopomofo processes..."
-Stop-Process -Name "McBopomofoServer*" -Force -ErrorAction SilentlyContinue
-Stop-Process -Name "McBopomofoConfig" -Force -ErrorAction SilentlyContinue
-Start-Sleep -Seconds 1
-
-Write-Host "2. Checking for locked DLLs..."
-$dllNames = @("McBopomofoTIP_x64.dll", "McBopomofoTIP_x86.dll", "McBopomofoTIP_arm64.dll", "McBopomofoTIP_v2.dll")
-$processesToKill = @()
-$ctfmonFound = $false
-
-$processes = Get-Process -ErrorAction SilentlyContinue
-foreach ($p in $processes) {
-    try {
-        $modules = $p.Modules | Select-Object -ExpandProperty ModuleName -ErrorAction SilentlyContinue
-        foreach ($dll in $dllNames) {
-            if ($modules -contains $dll) {
-                if ($p.ProcessName -eq "ctfmon") {
-                    $ctfmonFound = $true
-                } else {
-                    $processesToKill += $p
+$null = Test-JevPackage $target
+Invoke-JevNative (Join-Path $env:SystemRoot 'System32/icacls.exe') @($target, '/grant', '*S-1-15-2-1:(OI)(CI)(RX)', '/T', '/Q')
+$registrationStarted = $false
+try {
+    Stop-JevSessionProcesses
+    $registrationStarted = $true
+    Invoke-JevRegistration $target
+    New-Item -Path $key -Force | Out-Null
+    New-ItemProperty -Path $key -Name InstallDir -Value $target -PropertyType String -Force | Out-Null
+    New-ItemProperty -Path $key -Name Version -Value $manifest.version -PropertyType String -Force | Out-Null
+    New-ItemProperty -Path $key -Name InstallationType -Value 'Scripts' -PropertyType String -Force | Out-Null
+    New-ItemProperty -Path $runKey -Name 'JEV-IME-Server' -Value ('"' + (Join-Path $target 'JEVServer.exe') + '"') -PropertyType String -Force | Out-Null
+    Start-Process -FilePath (Join-Path $target 'JEVServer.exe') -WorkingDirectory $target
+} catch {
+    $failure = $_
+    if ($registrationStarted) {
+        try {
+            Invoke-JevRegistration $target -Unregister
+            if ($previousDirectory -and (Test-Path -LiteralPath $previousDirectory)) {
+                Invoke-JevRegistration $previousDirectory
+                New-ItemProperty -Path $key -Name InstallDir -Value $previousDirectory -PropertyType String -Force | Out-Null
+                if ($previous.PSObject.Properties['Version']) {
+                    New-ItemProperty -Path $key -Name Version -Value $previous.Version -PropertyType String -Force | Out-Null
                 }
-                break
-            }
-        }
-    } catch {}
-}
-
-if ($ctfmonFound) {
-    Write-Host "Restarting ctfmon.exe..."
-    Stop-Process -Name "ctfmon" -Force -ErrorAction SilentlyContinue
-    Start-Process "ctfmon.exe"
-}
-
-if ($processesToKill.Count -gt 0) {
-    Write-Host "`nThe following processes are locking McBopomofo DLLs:" -ForegroundColor Yellow
-    foreach ($p in $processesToKill) {
-        Write-Host " - $($p.ProcessName) (PID: $($p.Id))"
+                Start-Process -FilePath (Join-Path $previousDirectory 'JEVServer.exe') -WorkingDirectory $previousDirectory
+            } else { Remove-Item -LiteralPath $key -Recurse -ErrorAction SilentlyContinue }
+            if ($oldRunValue) {
+                New-ItemProperty -Path $runKey -Name 'JEV-IME-Server' -Value $oldRunValue -PropertyType String -Force | Out-Null
+            } else { Remove-ItemProperty -Path $runKey -Name 'JEV-IME-Server' -ErrorAction SilentlyContinue }
+        } catch { Write-Warning "Could not fully restore the previous installation: $_" }
     }
-    $choice = Read-Host "Would you like to try and close these processes? (Y/N)"
-    if ($choice -eq 'Y' -or $choice -eq 'y') {
-        foreach ($p in $processesToKill) {
-            Write-Host "Stopping $($p.ProcessName)..."
-            Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
-        }
-    } else {
-        Write-Warning "Installation may fail if DLLs are locked. Please close the applications manually and try again."
-        $choiceAbort = Read-Host "Abort installation? (Y/N)"
-        if ($choiceAbort -eq 'Y' -or $choiceAbort -eq 'y') { Exit }
-    }
+    throw $failure
 }
-
-Write-Host "`n3. Copying files to $installDir..."
-if (!(Test-Path $installDir)) { New-Item -ItemType Directory -Path $installDir -Force }
-if (!(Test-Path "$installDir\data")) { New-Item -ItemType Directory -Path "$installDir\data" -Force }
-
-Copy-Item "$sourceDir\McBopomofoServer.exe" "$installDir\" -Force
-Copy-Item "$sourceDir\McBopomofoConfig.exe" "$installDir\" -Force
-Copy-Item "$sourceDir\McBopomofoTIP_x64.dll" "$installDir\" -Force -ErrorAction SilentlyContinue
-Copy-Item "$sourceDir\McBopomofoTIP_x86.dll" "$installDir\" -Force -ErrorAction SilentlyContinue
-Copy-Item "$sourceDir\McBopomofoTIP_arm64.dll" "$installDir\" -Force -ErrorAction SilentlyContinue
-Copy-Item "$sourceDir\data\*" "$installDir\data\" -Recurse -Force
-
-Write-Host "4. Granting AppContainer permissions..."
-Grant-AppContainerReadAccess -Path $installDir
-
-Write-Host "5. Registering TSF DLLs..."
-if (Test-Path "$installDir\McBopomofoTIP_x64.dll") {
-    Start-Process -FilePath "C:\Windows\System32\regsvr32.exe" -ArgumentList "/s `"$installDir\McBopomofoTIP_x64.dll`"" -Wait
+try { & (Join-Path $target 'scripts/enable_tip.ps1') } catch {
+    Write-Warning "TSF is registered. Enable it for your normal Windows account with scripts/enable_tip.ps1: $_"
 }
-if (Test-Path "$installDir\McBopomofoTIP_x86.dll") {
-    Start-Process -FilePath "C:\Windows\SysWOW64\regsvr32.exe" -ArgumentList "/s `"$installDir\McBopomofoTIP_x86.dll`"" -Wait
-}
-if ((Test-Path "$installDir\McBopomofoTIP_arm64.dll") -and ($env:PROCESSOR_ARCHITECTURE -eq "ARM64" -or $env:PROCESSOR_ARCHITEW6432 -eq "ARM64")) {
-    Start-Process -FilePath "C:\Windows\System32\regsvr32.exe" -ArgumentList "/s `"$installDir\McBopomofoTIP_arm64.dll`"" -Wait
-}
-
-Write-Host "6. Restarting TSF (ctfmon.exe)..."
-Stop-Process -Name "ctfmon" -Force -ErrorAction SilentlyContinue
-Start-Process "ctfmon.exe"
-Start-Sleep -Seconds 1
-
-Write-Host "7. Configuring auto-start in Registry..."
-$RegistryPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
-$Name = "McBopomofoServer"
-$Value = "`"$installDir\McBopomofoServer.exe`""
-Set-ItemProperty -Path $RegistryPath -Name $Name -Value $Value
-
-Write-Host "8. Starting McBopomofoServer..."
-# Note: McBopomofoServer defaults to looking for data/data.txt relative to its own path.
-Start-Process -FilePath "$installDir\McBopomofoServer.exe" -WorkingDirectory "$installDir" -WindowStyle Hidden
-
-Write-Host "`nInstallation complete!"
-Write-Host "McBopomofo has been installed to $installDir"
-Write-Host "The server will now run automatically on startup."
+Write-Host "Installed JEV $($manifest.version) in $target"
+Write-Host 'Sign out and sign in, then press Win + Space to select JEV.'
+& (Join-Path $target 'scripts/verify_install.ps1')

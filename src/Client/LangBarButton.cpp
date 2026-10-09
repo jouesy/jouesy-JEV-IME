@@ -33,6 +33,7 @@
 #include "Globals.h"
 #include "Ipc.h"
 #include "McBopomofoTIP.h"
+#include "JevIdentity.h"
 #include "NamedPipe.h"
 #include "PathCompat.h"
 #include "Register.h"
@@ -49,23 +50,11 @@ extern const GUID GUID_LBI_INPUTMODE = {
     0x4178,
     {0xA3, 0xA7, 0x5F, 0x8A, 0x98, 0x75, 0x68, 0xE6}};
 // Regular language bar button for switching Chinese / English mode.
-extern const GUID GUID_LBI_SWITCH_LANG = {
-    0x5C7D0E31,
-    0x28C0,
-    0x4D1F,
-    {0xB3, 0xD5, 0x91, 0x6D, 0x57, 0xC9, 0x11, 0x7A}};
+extern const GUID GUID_LBI_SWITCH_LANG = JEV::Product::kSwitchLanguageGuid;
 // Regular language bar button for the full-width / half-width toggle.
-extern const GUID GUID_LBI_FULL_HALF = {
-    0x94A7B3E2,
-    0xD4F1,
-    0x4F7A,
-    {0x9A, 0x35, 0x28, 0x2C, 0x1F, 0x93, 0x68, 0x42}};
+extern const GUID GUID_LBI_FULL_HALF = JEV::Product::kFullHalfGuid;
 // Settings menu button
-extern const GUID GUID_LBI_SETTINGS = {
-    0x6B3E921C,
-    0x1E4F,
-    0x4B3A,
-    {0x8D, 0x7E, 0x2C, 0x9A, 0x5F, 0x3B, 0x1D, 0x0E}};
+extern const GUID GUID_LBI_SETTINGS = JEV::Product::kSettingsGuid;
 
 namespace {
 constexpr UINT MENU_TOGGLE_OPEN_CLOSE = 100;
@@ -109,7 +98,7 @@ void ApplyDarkThemeToWindow(HWND hwnd) {
 
 std::wstring SettingsPath() {
   std::filesystem::path path(McBopomofo::fcitx5_compat::userDirectory());
-  path /= "mcbopomofo.ini";
+  path /= JEV::Product::kSettingsFilename;
   return path.wstring();
 }
 

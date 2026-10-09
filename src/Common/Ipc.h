@@ -22,6 +22,7 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 
 #pragma once
+#include "JevIdentity.h"
 
 #include <cstdint>
 #include <string>
@@ -30,7 +31,7 @@
 namespace McBopomofo {
 namespace IPC {
 
-const char* const PIPE_NAME = "\\\\.\\pipe\\WinMcBopomofo_IPC_Pipe";
+inline const std::string PIPE_NAME = JEV::Product::PipeNameForCurrentSession();
 
 enum class Command : int {
   CMD_RESET = 0,

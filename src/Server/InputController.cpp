@@ -1059,6 +1059,33 @@ void InputController::refreshUI() { notifyUI_(); }
 
 void InputController::enterNewState_(std::unique_ptr<InputState> previousState,
                                      std::unique_ptr<InputState> newState) {
+  ++rankGeneration_;
+  auto* choosing = dynamic_cast<InputStates::ChoosingCandidate*>(newState.get());
+  if (choosing &&
+      !dynamic_cast<InputStates::ChoosingPunctuationList*>(newState.get()) &&
+      rankingPolicy_.enabled && rankingPolicy_.cloudConsent && scoreProvider_) {
+    JEV::RankRequest request;
+    request.generation = rankGeneration_;
+    request.context = choosing->composingBuffer;
+    for (std::size_t i = 0; i < choosing->candidates.size(); ++i) {
+      const auto& candidate = choosing->candidates[i];
+      request.candidates.push_back({i, candidate.reading, candidate.value});
+    }
+    try {
+      const auto order = JEV::RankCandidates(
+          request, scoreProvider_->lookup(request), rankingPolicy_);
+      std::vector<InputStates::ChoosingCandidate::Candidate> candidates;
+      candidates.reserve(order.size());
+      for (auto index : order) candidates.push_back(choosing->candidates[index]);
+      // Reconstruct the complete engine state, including raw value and reading.
+      // The UI, keyboard, and TSF selection paths all use this same vector.
+      newState = std::make_unique<InputStates::ChoosingCandidate>(
+          choosing->composingBuffer, choosing->cursorIndex,
+          choosing->originalCursor, std::move(candidates));
+    } catch (...) {
+      // Provider failures must never prevent ordinary offline typing.
+    }
+  }
   FCITX_MCBOPOMOFO_INFO() << "Server enterNewState from="
                           << StateName(previousState.get())
                           << " to=" << StateName(newState.get())

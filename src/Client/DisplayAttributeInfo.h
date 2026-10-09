@@ -26,11 +26,11 @@
 #include <windows.h>
 
 // GUID for normal inputting state (Underline)
-// {4B688CD4-CFB6-4767-AD80-4D562086FC3B}
+// JEV identity is generated from data/jev-product.json.
 extern const GUID c_guidDisplayAttributeInput;
 
 // GUID for marking/highlight state (Highlight)
-// {D82C4A26-E0CC-43BB-8CF2-BB0BBFF4FE70}
+// JEV identity is generated from data/jev-product.json.
 extern const GUID c_guidDisplayAttributeMarked;
 
 class CDisplayAttributeInfo : public ITfDisplayAttributeInfo {

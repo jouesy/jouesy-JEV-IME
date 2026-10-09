@@ -929,7 +929,7 @@ STDAPI McBopomofoTIP::GetDisplayAttributeInfo(
     da.crLine.type = TF_CT_SYSCOLOR;
     da.crLine.nIndex = COLOR_WINDOWTEXT;
     *ppInfo = new CDisplayAttributeInfo(c_guidDisplayAttributeInput, da,
-                                        L"Win-McBopomofo Input");
+                                        L"JEV Bopomofo Input");
   } else if (IsEqualGUID(guidInfo, c_guidDisplayAttributeMarked)) {
     TF_DISPLAYATTRIBUTE da;
     ZeroMemory(&da, sizeof(da));
@@ -939,7 +939,7 @@ STDAPI McBopomofoTIP::GetDisplayAttributeInfo(
     da.crBk.type = TF_CT_SYSCOLOR;
     da.crBk.nIndex = COLOR_HIGHLIGHT;
     *ppInfo = new CDisplayAttributeInfo(c_guidDisplayAttributeMarked, da,
-                                        L"Win-McBopomofo Marked");
+                                        L"JEV Bopomofo Marked");
   }
 
   return (*ppInfo != nullptr) ? S_OK : E_INVALIDARG;

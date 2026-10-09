@@ -14,3 +14,5 @@ tmp_pime/
 # IDE
 .vs/
 *.aps
+__pycache__/
+*.pyc

@@ -39,7 +39,7 @@
 #pragma comment(lib, "dwrite.lib")
 #pragma comment(lib, "dwmapi.lib")
 
-const wchar_t* const CANDIDATE_WINDOW_CLASS = L"WinMcBopomofoCandidateWindow";
+const wchar_t* const CANDIDATE_WINDOW_CLASS = L"JEVIMECandidateWindow";
 
 #ifndef DWMWA_WINDOW_CORNER_PREFERENCE
 #define DWMWA_WINDOW_CORNER_PREFERENCE 33
@@ -500,7 +500,7 @@ void CandidateWindow::SetOwnerWindow(HWND ownerHwnd) {
   ownerHwnd_ = ownerHwnd;
   updateRenderMode_();
 #ifdef WINMCBOPOMOFO_SERVER_SIDE_POPUP
-  // Server-side popups live in McBopomofoServer.exe, not in the foreground
+  // Server-side popups live in JEVServer.exe, not in the foreground
   // app process. Do not owner-chain a server HWND to a cross-process
   // foreground HWND.
 #else

@@ -64,7 +64,7 @@ void AppendLogLineToTemp(DWORD processId, ULONGLONG elapsedMs,
   }
 
   std::string tempLogPath(tempPath);
-  tempLogPath += "mcbopomofo_tip.log";
+  tempLogPath += "jev_tip.log";
   AppendLogLine(tempLogPath.c_str(), processId, elapsedMs, message);
 }
 
@@ -122,12 +122,10 @@ void LogMessageImpl(bool relayToServer, const char* format, va_list args) {
   ULONGLONG elapsedMs = ElapsedMsSinceProcessStart();
 
   char dbgBuffer[1100];
-  sprintf_s(dbgBuffer, "[WinMcBopomofo] [%lu][+%llums] %s\n", processId,
+  sprintf_s(dbgBuffer, "[JEV-IME] [%lu][+%llums] %s\n", processId,
             elapsedMs, buffer);
   OutputDebugStringA(dbgBuffer);
 
-  AppendLogLine("C:\\Users\\Public\\mcbopomofo_tip.log", processId, elapsedMs,
-                buffer);
   AppendLogLineToTemp(processId, elapsedMs, buffer);
 
   if (relayToServer) {

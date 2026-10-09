@@ -22,6 +22,7 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 
 #include "Settings.h"
+#include "JevIdentity.h"
 
 #include <windows.h>
 
@@ -39,7 +40,7 @@ Settings::Settings() { load(); }
 std::wstring Settings::iniFilePath_() const {
   std::string dir = fcitx5_compat::userDirectory();
   std::filesystem::path p(dir);
-  p /= "mcbopomofo.ini";
+  p /= JEV::Product::kSettingsFilename;
   return p.wstring();
 }
 

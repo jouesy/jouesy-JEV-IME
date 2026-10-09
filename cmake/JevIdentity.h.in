@@ -1,0 +1,32 @@
+// Generated from data/jev-product.json. JEV additions are MIT licensed.
+#pragma once
+#include <string>
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
+namespace JEV::Product {
+inline constexpr char kVersion[] = "@JEV_VERSION@";
+inline constexpr char kUserDirectory[] = "@JEV_userDirectory@";
+inline constexpr char kSettingsFilename[] = "@JEV_settingsFilename@";
+#ifdef _WIN32
+inline constexpr CLSID kTipClsid = @JEV_clsid@;
+inline constexpr GUID kProfileGuid = @JEV_profileGuid@;
+inline constexpr GUID kDisplayInputGuid = @JEV_displayInputGuid@;
+inline constexpr GUID kDisplayMarkedGuid = @JEV_displayMarkedGuid@;
+inline constexpr GUID kSwitchLanguageGuid = @JEV_switchLanguageGuid@;
+inline constexpr GUID kFullHalfGuid = @JEV_fullHalfGuid@;
+inline constexpr GUID kSettingsGuid = @JEV_settingsGuid@;
+
+// TSF clients and the server in the same Windows session share a pipe.
+inline std::string PipeNameForCurrentSession() {
+  DWORD session = 0;
+  if (!ProcessIdToSessionId(GetCurrentProcessId(), &session)) {
+    // A process-specific fallback fails closed instead of using another session.
+    return "\\\\.\\pipe\\JEV_IME_unavailable_" +
+           std::to_string(GetCurrentProcessId());
+  }
+  return "\\\\.\\pipe\\@JEV_pipePrefix@" + std::to_string(session);
+}
+#endif
+}  // namespace JEV::Product

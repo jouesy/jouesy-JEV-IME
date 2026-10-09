@@ -1,174 +1,39 @@
-# build_msi.ps1
-# Script to build a Win-McBopomofo MSI installer
-#
+# Reproducible JEV x64 MSI using WiX 6.0.2.
+[CmdletBinding()]
 param(
-    [string]$Configuration = "Release",
-    [string]$OutputName = "Win-McBopomofo-Installer.msi",
-    [switch]$SkipBuild = $false
+    [ValidateSet('Debug', 'Release')][string]$Configuration = 'Release',
+    [switch]$SkipBuild,
+    [switch]$RunTests
 )
-
-$ErrorActionPreference = "Stop"
-
-$X64BuildRoot = "build_x64"
-$X86BuildRoot = "build_x86"
-$Arm64BuildRoot = "build_arm64"
-
-$X64BinDir = "$X64BuildRoot\bin\$Configuration"
-$X86BinDir = "$X86BuildRoot\bin\$Configuration"
-$Arm64BinDir = "$Arm64BuildRoot\bin\$Configuration"
-$OpenCCDir = "$X64BuildRoot\third_party\OpenCC\data"
-$GeneratedDir = "build_msi_generated"
-$LicenseTxtPath = "LICENSE.txt"
-$LicenseRtfPath = Join-Path $GeneratedDir "LICENSE.rtf"
-$RequiredWixExtensionVersion = "7.0.0"
-
-# Detect current platform
-function Get-CurrentPlatform {
-    $processorArchitecture = $env:PROCESSOR_ARCHITECTURE
-    $processorArchW6432 = $env:PROCESSOR_ARCHITEW6432
-    if ($null -eq $processorArchW6432) {
-        switch ($processorArchitecture) {
-            "AMD64" { return "x64" }
-            "ARM64" { return "ARM64" }
-            "x86" { return "x86" }
-            default { return $processorArchitecture }
-        }
-    } else {
-        switch ($processorArchW6432) {
-            "AMD64" { return "x64" }
-            "ARM64" { return "ARM64" }
-            default { return "x64" }
-        }
-    }
+. (Join-Path $PSScriptRoot 'scripts/WindowsHelpers.ps1')
+Assert-JevWindowsX64
+$wixVersion = '6.0.2'
+$product = Get-Content (Join-Path $PSScriptRoot 'data/jev-product.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+if (-not $SkipBuild) { & (Join-Path $PSScriptRoot 'build.ps1') -Configuration $Configuration -RunTests:$RunTests }
+$packageDir = Join-Path $PSScriptRoot "dist/JEV-IME-$($product.version)-win-x64"
+$null = Test-JevPackage $packageDir
+if (-not (Get-Command wix -ErrorAction SilentlyContinue)) {
+    throw 'Install WiX first: dotnet tool install --global wix --version 6.0.2'
 }
-
-$CurrentPlatform = Get-CurrentPlatform
-Write-Host "Detected current platform: $CurrentPlatform" -ForegroundColor Cyan
-
-function Should-SkipOpenCCDict {
-    param([string]$TargetArchitecture, [string]$CurrentPlatform)
-    return ($TargetArchitecture -ne $CurrentPlatform)
+$actualVersion = (& wix --version).Trim()
+if ($LASTEXITCODE -ne 0 -or $actualVersion -notmatch '^6\.0\.2([.+-]|$)') {
+    throw "WiX 6.0.2 is required; found '$actualVersion'."
 }
-
-function Get-CMakeCacheValue {
-    param([string]$CachePath, [string]$VariableName)
-    if (-not (Test-Path $CachePath)) { return $null }
-    $match = Select-String -Path $CachePath -Pattern "^$([regex]::Escape($VariableName)):.*=(.*)$" -ErrorAction SilentlyContinue | Select-Object -First 1
-    if ($null -eq $match) { return $null }
-    return $match.Matches[0].Groups[1].Value
-}
-
-$requiredArtifacts = @(
-    "$X64BinDir\McBopomofoServer.exe",
-    "$X64BinDir\McBopomofoConfig.exe",
-    "$X64BinDir\McBopomofoTIP_v2.dll",
-    "$X86BinDir\McBopomofoServer.exe",
-    "$X86BinDir\McBopomofoConfig.exe",
-    "$X86BinDir\McBopomofoTIP_v2.dll",
-    "$Arm64BinDir\McBopomofoServer.exe",
-    "$Arm64BinDir\McBopomofoConfig.exe",
-    "$Arm64BinDir\McBopomofoTIP_v2.dll"
-)
-
-function Build-Architecture([string]$Architecture, [string]$BuildRoot, [string]$Configuration) {
-    Write-Host "Building $Architecture architecture in $BuildRoot..." -ForegroundColor Cyan
-    if (-not (Test-Path $BuildRoot)) { New-Item -ItemType Directory -Path $BuildRoot | Out-Null }
-    Push-Location $BuildRoot
-    try {
-        $skipOpenCCDict = Should-SkipOpenCCDict -TargetArchitecture $Architecture -CurrentPlatform $CurrentPlatform
-        $skipOpenCCDictFlag = if ($skipOpenCCDict) { "-DSKIP_OPENCC_DICT=ON" } else { "-DSKIP_OPENCC_DICT=OFF" }
-        $cachePath = Join-Path $BuildRoot "CMakeCache.txt"
-        $cachedSkipOpenCCDict = Get-CMakeCacheValue -CachePath $cachePath -VariableName "SKIP_OPENCC_DICT"
-        $needsConfigure = $true
-        if ($cachedSkipOpenCCDict -ne $null) {
-            if (($skipOpenCCDict -and $cachedSkipOpenCCDict.Trim() -eq "ON") -or (-not $skipOpenCCDict -and $cachedSkipOpenCCDict.Trim() -eq "OFF")) { $needsConfigure = $false }
-        }
-        if ($needsConfigure) {
-            $cmakeArgs = @($skipOpenCCDictFlag, "-DCMAKE_BUILD_TYPE=$Configuration")
-            if ($Architecture -eq "ARM64") { cmake -A ARM64 @cmakeArgs .. }
-            elseif ($Architecture -eq "x86") { cmake -A Win32 @cmakeArgs .. }
-            else { cmake -A x64 @cmakeArgs .. }
-            if ($LASTEXITCODE -ne 0) { throw "CMake configure failed" }
-        }
-        if ($Architecture -eq "x64") {
-            cmake --build . --config $Configuration --target third_party/OpenCC/data/Dictionaries
-        }
-        cmake --build . --config $Configuration --target McBopomofoTIP McBopomofoServer McBopomofoConfig
-        if ($LASTEXITCODE -ne 0) { throw "CMake build failed" }
-    } finally { Pop-Location }
-}
-
-function Build-AllArchitectures {
-    if ($SkipBuild) {
-        $missing = $requiredArtifacts | Where-Object { -not (Test-Path $_) }
-        if ($missing.Count -gt 0) {
-            Write-Host "Error: Artifacts missing and -SkipBuild set." -ForegroundColor Red
-            exit 1
-        }
-        return
-    }
-
-    Build-Architecture "x64" $X64BuildRoot $Configuration
-    Build-Architecture "x86" $X86BuildRoot $Configuration
-    Build-Architecture "ARM64" $Arm64BuildRoot $Configuration
-}
-
-function Convert-LicenseTextToRtf([string]$InputPath, [string]$OutputPath) {
-    if (-not (Test-Path $GeneratedDir)) { New-Item -ItemType Directory -Path $GeneratedDir | Out-Null }
-    $content = (Get-Content -LiteralPath $InputPath -Raw) -replace "`r`n", "`n" -replace "`r", "`n"
-    $content = $content.TrimEnd("`n")
-    $paragraphs = $content -split "`n[ `t]*`n+"
-    $escapedParagraphs = $paragraphs | ForEach-Object {
-        $paragraph = ($_ -split "`n" | ForEach-Object { $_.Trim() }) -join " "
-        $paragraph.Replace('\', '\\').Replace('{', '\{').Replace('}', '\}')
-    }
-    $escaped = $escapedParagraphs -join "\par`n\par`n"
-    $rtf = "{\rtf1\ansi\deff0{\fonttbl{\f0 Arial;}}\viewkind4\uc1\pard\f0\fs20 " + $escaped + "}"
-    Set-Content -LiteralPath $OutputPath -Value $rtf -Encoding ASCII
-}
-
-Build-AllArchitectures
-Convert-LicenseTextToRtf -InputPath $LicenseTxtPath -OutputPath $LicenseRtfPath
-
-function Find-WixExecutable {
-    $candidates = @("C:\Program Files\WiX Toolset v7.0\bin\wix.exe", "C:\Program Files\WiX Toolset v4.0\bin\wix.exe")
-    $cmd = Get-Command wix -ErrorAction SilentlyContinue
-    if ($cmd) { $candidates += $cmd.Source }
-    foreach ($c in $candidates | Select-Object -Unique) { if (Test-Path $c) { return $c } }
-    return $null
-}
-
-function Add-WixExtension([string]$WixExe, [string]$ExtensionId) {
-    $extensionRef = "$ExtensionId/$RequiredWixExtensionVersion"
-    & $WixExe extension add -g $extensionRef
-    if ($LASTEXITCODE -ne 0) {
-        throw "Failed to install WiX extension: $extensionRef"
-    }
-}
-
-function Invoke-WixBuild([string]$WixExe, [string]$OutDir, [string]$OutputName, [string]$X64BinDir, [string]$X86BinDir, [string]$Arm64BinDir, [string]$OpenCCDir) {
-    $MsiPath = Join-Path $OutDir $OutputName
-
-    Write-Host "Installing required WiX extensions..." -ForegroundColor Cyan
-    Add-WixExtension $WixExe "WixToolset.UI.wixext"
-    Add-WixExtension $WixExe "WixToolset.Util.wixext"
-
-    Write-Host "Building MSI installer (zh-TW)..." -ForegroundColor Cyan
-    # We use zh-TW as the primary culture for the installer UI.
-    # We still provide both .wxl files to the build process.
-    & $WixExe build -ext "WixToolset.UI.wixext/$RequiredWixExtensionVersion" -ext "WixToolset.Util.wixext/$RequiredWixExtensionVersion" `
-        installer\installer.wxs installer\zh-TW.wxl installer\en-US.wxl `
-        -culture zh-TW -o $MsiPath `
-        -b "X64BinDir=$X64BinDir" -b "X86BinDir=$X86BinDir" -b "Arm64BinDir=$Arm64BinDir" -b "OpenCCDir=$OpenCCDir"
-    
-    if ($LASTEXITCODE -ne 0) { throw "MSI build failed" }
-}
-
-$WixExe = Find-WixExecutable
-if (-not $WixExe) { Write-Host "Error: WiX CLI not found." -ForegroundColor Red; exit 1 }
-
-$OutDir = "dist"
-if (-not (Test-Path $OutDir)) { New-Item -ItemType Directory -Path $OutDir | Out-Null }
-
-Invoke-WixBuild $WixExe $OutDir $OutputName $X64BinDir $X86BinDir $Arm64BinDir $OpenCCDir
-Write-Host "Successfully created MSI at: dist\$OutputName" -ForegroundColor Green
+Invoke-JevNative wix @('extension', 'add', '-g', "WixToolset.UI.wixext/$wixVersion")
+Invoke-JevNative wix @('extension', 'add', '-g', "WixToolset.Util.wixext/$wixVersion")
+$generated = Join-Path $PSScriptRoot 'build_msi_generated'
+New-Item -ItemType Directory -Path $generated -Force | Out-Null
+$license = Get-Content (Join-Path $PSScriptRoot 'LICENSE.txt') -Raw
+$escaped = $license.Replace('\', '\\').Replace('{', '\{').Replace('}', '\}')
+$escaped = $escaped -replace '\r?\n', '\par '
+Set-Content -LiteralPath "$generated/LICENSE.rtf" -Encoding ASCII -Value ('{\rtf1\ansi\deff0{\fonttbl{\f0 Arial;}}\f0\fs20 ' + $escaped + '}')
+$msi = Join-Path $PSScriptRoot "dist/JEV-IME-$($product.version)-win-x64.msi"
+Push-Location $PSScriptRoot
+try {
+    Invoke-JevNative wix @('build', 'installer/installer.wxs', 'installer/zh-TW.wxl',
+        '-arch', 'x64', '-culture', 'zh-TW',
+        '-ext', "WixToolset.UI.wixext/$wixVersion", '-ext', "WixToolset.Util.wixext/$wixVersion",
+        '-d', "ProductVersion=$($product.version)", '-d', "UpgradeCode=$($product.upgradeCode)",
+        '-b', "PackageDir=$packageDir", '-o', $msi)
+    Write-Host "MSI: $msi"
+} finally { Pop-Location }

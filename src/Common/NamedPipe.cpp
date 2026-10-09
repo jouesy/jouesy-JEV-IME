@@ -88,7 +88,8 @@ void NamedPipeServer::ServerLoop() {
   while (running_) {
     HANDLE hPipe =
         CreateNamedPipeA(pipeName_.c_str(), PIPE_ACCESS_DUPLEX,
-                         PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+                         PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT |
+                             PIPE_REJECT_REMOTE_CLIENTS,
                          PIPE_UNLIMITED_INSTANCES, 4096, 4096, 0,
                          sa.lpSecurityDescriptor ? &sa : NULL);
 
