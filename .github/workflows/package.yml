@@ -33,11 +33,15 @@ jobs:
           Expand-Archive -LiteralPath ./dist/JEV-IME-0.1.0-win-x64.zip -DestinationPath $stage
           $manifest = Test-JevPackage $stage
           # Reuse only binaries whose native source has not changed.
-          git diff --exit-code $manifest.sourceRevision HEAD -- src cmake CMakeLists.txt data tests
+          git diff --exit-code $manifest.sourceRevision HEAD -- src cmake CMakeLists.txt data tests/windows .gitmodules third_party/OpenCC
           if ($LASTEXITCODE -ne 0) { throw 'Native source differs from the tested binary package; rebuild first.' }
           Copy-Item -LiteralPath ./NOTICE.md -Destination $stage
           Copy-Item -LiteralPath ./docs/install-exe.md -Destination "$stage/README.md"
           Copy-Item -LiteralPath ./licenses/NSIS-COPYING.txt -Destination "$stage/licenses"
+          # Installer helpers can change without changing the tested native binaries.
+          foreach ($file in @('WindowsHelpers.ps1', 'setup.ps1', 'uninstall.ps1', 'enable_tip.ps1', 'verify_install.ps1')) {
+            Copy-Item -LiteralPath "scripts/$file" -Destination "$stage/scripts"
+          }
           $manifest | Add-Member -NotePropertyName installerSourceRevision -NotePropertyValue $env:GITHUB_SHA -Force
           $manifest.files = @(Get-ChildItem -LiteralPath $stage -Recurse -File |
             Where-Object { $_.Name -ne 'manifest.json' } | Sort-Object FullName | ForEach-Object {

@@ -1,6 +1,7 @@
 # Copyright (c) 2026 JEV contributors. SPDX-License-Identifier: MIT
 [CmdletBinding()]
-param([string]$SourceDir = '', [string]$InstallRoot = "$env:ProgramFiles\JEV-IME")
+param([string]$SourceDir = '', [string]$InstallRoot = "$env:ProgramFiles\JEV-IME", [string]$LogPath = '')
+if ($LogPath) { Start-Transcript -LiteralPath $LogPath -Force | Out-Null }
 . (Join-Path $PSScriptRoot 'WindowsHelpers.ps1')
 Assert-JevWindowsX64 -RequireAdmin
 if (-not $SourceDir) {

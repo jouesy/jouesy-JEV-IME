@@ -14,7 +14,11 @@ $sentinelHash = (Get-FileHash -LiteralPath $sentinel -Algorithm SHA256).Hash
 $uninstaller = $null
 try {
     $process = Start-Process -FilePath (Resolve-Path -LiteralPath $InstallerPath).Path -ArgumentList '/S' -Wait -PassThru
-    if ($process.ExitCode -ne 0) { throw "Installer returned $($process.ExitCode)." }
+    if ($process.ExitCode -ne 0) {
+        $log = Join-Path $env:TEMP 'JEV-Setup.log'
+        if (Test-Path -LiteralPath $log) { Get-Content -LiteralPath $log | Write-Host }
+        throw "Installer returned $($process.ExitCode)."
+    }
     $installed = Get-ItemProperty 'HKLM:\SOFTWARE\JEV-IME' -ErrorAction Stop
     if ($installed.InstallationType -ne 'EXE') { throw 'Installer did not record EXE ownership.' }
     if ($installed.Version -ne $product.version) { throw 'Incorrect installed version.' }
@@ -39,7 +43,11 @@ try {
     }
     if ($uninstaller -and (Test-Path -LiteralPath $uninstaller)) {
         $process = Start-Process -FilePath $uninstaller -ArgumentList '/S' -Wait -PassThru
-        if ($process.ExitCode -ne 0) { throw "Uninstaller returned $($process.ExitCode)." }
+        if ($process.ExitCode -ne 0) {
+            $log = Join-Path $env:TEMP 'JEV-Uninstall.log'
+            if (Test-Path -LiteralPath $log) { Get-Content -LiteralPath $log | Write-Host }
+            throw "Uninstaller returned $($process.ExitCode)."
+        }
     }
 }
 if (Test-Path 'HKLM:\SOFTWARE\JEV-IME') { throw 'Install metadata remains after uninstall.' }

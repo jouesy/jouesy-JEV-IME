@@ -1,6 +1,7 @@
 # Copyright (c) 2026 JEV contributors. SPDX-License-Identifier: MIT
 [CmdletBinding()]
-param()
+param([string]$LogPath = '')
+if ($LogPath) { Start-Transcript -LiteralPath $LogPath -Force | Out-Null }
 . (Join-Path $PSScriptRoot 'WindowsHelpers.ps1')
 Assert-JevWindowsX64 -RequireAdmin
 $key = 'HKLM:\SOFTWARE\JEV-IME'

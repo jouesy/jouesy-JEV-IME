@@ -52,13 +52,22 @@ Var ProcessResult
 Var ProcessOutput
 
 Function .onInit
+  FileOpen $0 "$TEMP\JEV-Setup.log" w
+  FileWrite $0 "Starting JEV installer. Windows directory: $WINDIR$\r$\n"
+  FileClose $0
   ${IfNot} ${IsNativeAMD64}
+    FileOpen $0 "$TEMP\JEV-Setup.log" a
+    FileWrite $0 "Rejected: native architecture is not AMD64.$\r$\n"
+    FileClose $0
     MessageBox MB_OK|MB_ICONSTOP "此版本需要 Windows 11 x64；目前尚不支援 ARM64。" /SD IDOK
     SetErrorLevel 1
     Quit
   ${EndIf}
   SetRegView 64
   ReadRegStr $0 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion" "CurrentBuildNumber"
+  FileOpen $1 "$TEMP\JEV-Setup.log" a
+  FileWrite $1 "Windows build: $0$\r$\n"
+  FileClose $1
   ${If} $0 < 22000
     MessageBox MB_OK|MB_ICONSTOP "此版本需要 Windows 11（組建 22000 或更新）。" /SD IDOK
     SetErrorLevel 1
@@ -82,9 +91,12 @@ Section "JEV 智慧注音" SecMain
   SetOutPath "$PackagePath"
   File /r "${PACKAGE_FILES}"
   DetailPrint "正在安裝及註冊 JEV 輸入法…"
-  nsExec::ExecToStack /TIMEOUT=180000 '"$PowershellPath" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$PackagePath\scripts\setup.ps1" -SourceDir "$PackagePath" -InstallRoot "$INSTDIR"'
+  nsExec::ExecToStack /TIMEOUT=180000 '"$PowershellPath" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$PackagePath\scripts\setup.ps1" -SourceDir "$PackagePath" -InstallRoot "$INSTDIR" -LogPath "$TEMP\JEV-Setup.log"'
   Pop $ProcessResult
   Pop $ProcessOutput
+  FileOpen $0 "$TEMP\JEV-Setup.log" a
+  FileWrite $0 "$\r$\nPowerShell exit: $ProcessResult$\r$\n$ProcessOutput$\r$\n"
+  FileClose $0
   DetailPrint "$ProcessOutput"
   ${If} $ProcessResult != 0
     MessageBox MB_OK|MB_ICONSTOP "JEV 安裝失敗（代碼：$ProcessResult）。$\r$\n$\r$\n$ProcessOutput" /SD IDOK
@@ -137,7 +149,7 @@ FunctionEnd
 
 Section "Uninstall"
   DetailPrint "正在解除註冊 JEV 輸入法…"
-  nsExec::ExecToStack /TIMEOUT=180000 '"$PowershellPath" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$InstalledVersionDir\scripts\uninstall.ps1"'
+  nsExec::ExecToStack /TIMEOUT=180000 '"$PowershellPath" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$InstalledVersionDir\scripts\uninstall.ps1" -LogPath "$TEMP\JEV-Uninstall.log"'
   Pop $ProcessResult
   Pop $ProcessOutput
   DetailPrint "$ProcessOutput"
