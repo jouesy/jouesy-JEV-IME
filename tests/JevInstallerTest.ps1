@@ -13,7 +13,15 @@ Set-Content -LiteralPath $sentinel -Value 'Personal data must survive uninstall.
 $sentinelHash = (Get-FileHash -LiteralPath $sentinel -Algorithm SHA256).Hash
 $uninstaller = $null
 try {
-    $process = Start-Process -FilePath (Resolve-Path -LiteralPath $InstallerPath).Path -ArgumentList '/S' -Wait -PassThru
+    # Start-Process -Wait waits for the entire descendant tree on Windows.
+    # JEVServer intentionally stays running after setup, so wait only for the
+    # installer process and enforce a deadline for genuine installer hangs.
+    $process = Start-Process -FilePath (Resolve-Path -LiteralPath $InstallerPath).Path -ArgumentList '/S' -PassThru
+    if (-not $process.WaitForExit(240000)) {
+        $log = Join-Path $env:TEMP 'JEV-Setup.log'
+        if (Test-Path -LiteralPath $log) { Get-Content -LiteralPath $log | Write-Host }
+        throw 'Installer did not finish within four minutes.'
+    }
     if ($process.ExitCode -ne 0) {
         $log = Join-Path $env:TEMP 'JEV-Setup.log'
         if (Test-Path -LiteralPath $log) { Get-Content -LiteralPath $log | Write-Host }
