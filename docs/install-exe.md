@@ -2,9 +2,8 @@
 
 適用於 Windows 11 x64；ARM64 尚未支援。
 
-1. 從 [Releases](https://github.com/jouesy/jouesy-JEV-IME/releases) 下載
-   `JEV-Setup-0.1.0-win-x64.exe`。如果頁面還沒有這個檔案，表示建置尚未完成；
-   專案的 Code 頁面提供原始碼，不是安裝檔。
+1. [直接下載 JEV-Setup-0.1.0-win-x64.exe](https://github.com/jouesy/jouesy-JEV-IME/releases/download/v0.1.0/JEV-Setup-0.1.0-win-x64.exe)，
+   或到 [Releases](https://github.com/jouesy/jouesy-JEV-IME/releases/tag/v0.1.0) 的 Assets 點選該檔案。
 2. 雙擊 EXE，允許 Windows 的系統管理員權限提示，再按安裝。
 3. 安裝完成後登出 Windows，再登入。
 4. 按 `Win + Space`，選擇「JEV 智慧注音」。
@@ -19,7 +18,7 @@
 JEV 智慧注音。解除安裝會保留 `%APPDATA%\JEV-IME` 中的個人詞庫與設定。
 
 V0.1 提供離線注音輸入與選字；尚未加入 Jev API、語音輸入或智慧文字修正。
-這是測試版本，Windows 11 的 Word／Chrome／LINE 相容性驗收狀態見
+這是尚未簽章的測試版本，Windows 11 的 Word／Chrome／LINE 相容性驗收狀態見
 [Windows 驗收表](https://github.com/jouesy/jouesy-JEV-IME/blob/main/docs/windows-validation.md)。
 
 ## 開發者打包

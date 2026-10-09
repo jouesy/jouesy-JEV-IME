@@ -10,7 +10,7 @@ Windows 原生編譯及安裝／移除驗證由 GitHub Actions 執行；Word／C
 
 ## 從原始碼建置
 
-保留本 JEV 專案的修改，解壓縮原始碼套件後进入 `JEV-IME` 目錄。套件已包含
+保留本 JEV 專案的修改，解壓縮原始碼套件後進入 `JEV-IME` 目錄。套件已包含
 固定版本的 OpenCC 原始碼，無需重新下載上游輸入法。
 
 需要 Visual Studio 2026「使用 C++ 的桌面開發」工作負載、x64/x86 MSVC、
@@ -67,7 +67,7 @@ dist/JEV-IME-0.1.0-win-x64.zip
 ```
 
 啟動設定介面：執行安裝目錄中的 `JEVConfig.exe`，或使用語言列的「設定」。
-若使用 MSI，可從開始功能表開啟「JEV 智慧注音設定」。
+EXE 安裝亦提供開始功能表的「JEV 設定」捷徑。
 
 ## 解除安裝
 
@@ -91,7 +91,7 @@ dotnet tool install --global wix --version 6.0.2
 ```
 
 輸出為 `dist/JEV-IME-0.1.0-win-x64.msi`。UI 與 Util 擴充亦固定使用 6.0.2。
-MSI 原始碼已備妥，本次環境無法建出或驗證 MSI。首次安裝／更新 MSI 後請登出
+MSI 原始碼已備妥；安裝、升級、修復及 rollback 尚未完成驗證。首次安裝／更新 MSI 後請登出
 再登入，讓 JEVServer 在使用者自己的工作階段啟動。從腳本版改用 MSI 前先解除
 安裝腳本版，個人資料會保留。
 

@@ -4,16 +4,19 @@
 識別碼、輸入法名稱、安裝流程及使用者資料夾。目標是在 Windows 11 用
 `Win + Space` 切換，並在一般應用程式中直接打字。
 
-安裝檔將放在 **[Releases 下載頁](https://github.com/jouesy/jouesy-JEV-IME/releases)**，
-檔名為 `JEV-Setup-0.1.0-win-x64.exe`。如果 Releases 尚未列出這個檔案，
-表示 Windows 建置與安裝驗證仍在進行；Code 頁面只提供原始碼。
-一般使用者請參考 [EXE 安裝說明](docs/install-exe.md)。
+**[下載 Windows 11 x64 安裝檔：JEV-Setup-0.1.0-win-x64.exe](https://github.com/jouesy/jouesy-JEV-IME/releases/download/v0.1.0/JEV-Setup-0.1.0-win-x64.exe)**
 
-共用注音核心已在 Linux 驗證，Windows 原生編譯與測試正在 GitHub Actions
-執行。Word／Chrome／LINE 的 Windows 11 實機相容性仍待驗收。
+[Releases 下載頁與校驗檔](https://github.com/jouesy/jouesy-JEV-IME/releases/tag/v0.1.0)
+提供單一 EXE；Code 頁面提供原始碼。雙擊安裝，完成後登出再登入，再按
+`Win + Space` 選擇「JEV 智慧注音」。一般使用者不用自行編譯，詳見
+[EXE 安裝說明](docs/install-exe.md)。
+
+已在 Windows runner 完成 x64／x86 原生編譯、九個 JEV 測試，以及真實 EXE
+安裝／解除安裝檢查。此為尚未簽章的 V0.1 測試版；Word／Chrome／LINE 的
+Windows 11 實機相容性仍待驗收，詳見 [驗證紀錄](docs/verification.md)。
 
 已加入 JEV 候選排序介面與測試，但 V0.1 沒有連接 Jev API，沒有錄音或
-Whisper，也没有生成式文字修正。一般注音輸入使用本機詞庫；雲端功能預設關閉。
+Whisper，也沒有生成式文字修正。一般注音輸入使用本機詞庫；雲端功能預設關閉。
 
 ## Windows 建置及安裝
 
@@ -34,7 +37,7 @@ CMake 及 Python 3。原始碼 ZIP 已包含 OpenCC；若從此 JEV 專案的 Gi
 ```
 
 登出再登入，按 `Win + Space` 選擇「JEV 智慧注音」。
-建置脚本會產生 `dist/JEV-IME-0.1.0-win-x64.zip`。安裝 NSIS 3.11 後可打包單檔 EXE：
+建置腳本會產生 `dist/JEV-IME-0.1.0-win-x64.zip`。安裝 NSIS 3.11 後可打包單檔 EXE：
 
 ```powershell
 .\build_exe.ps1 -SkipBuild

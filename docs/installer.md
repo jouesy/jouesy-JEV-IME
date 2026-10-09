@@ -1,103 +1,46 @@
-# Win-McBopomofo Installer Guide
+# JEV Windows 安裝器
 
-This document describes what the Win-McBopomofo MSI installer does when run on a user's machine, and explains how developers can build it.
+一般使用者使用 `JEV-Setup-0.1.0-win-x64.exe`，操作見 [EXE 安裝說明](install-exe.md)。
+EXE 使用 NSIS 3.11，內嵌完整套件，安裝時不需要下載開發工具或詞庫。
 
-## 1. What the Installer Does
+## 安裝行為
 
-**Note: Running the MSI installer requires elevated (Administrator) privileges.** This is because it writes to protected system directories (`Program Files`) and performs system-wide COM registration.
+- 要求系統管理員權限，檢查原生 x64 架構及 Windows build 22000 以上。
+- 驗證套件 manifest 中的 SHA-256，保留第三方授權。
+- 複製至 `%ProgramFiles%\JEV-IME\版本-時間`，避免覆寫仍被應用程式載入的 DLL。
+- 用各自位元的 `regsvr32` 註冊 x64／x86 TIP；註冊失敗會嘗試復原原先版本。
+- 設定每位使用者登入時啟動 JEVServer，為安裝帳號啟用繁體中文 JEV profile。
+- 在開始功能表加入設定、目前帳號啟用與解除安裝捷徑，並加入 Windows 已安裝應用程式清單。
 
-The installer is authored using the WiX Toolset v4/v7 (`installer/installer.wxs`) and performs the following actions during installation:
+安裝後重新登入，再用 `Win + Space` 切換。使用不同管理員帳號安裝時，在日常
+使用的帳號點選開始功能表的「啟用 JEV 注音」。
 
-### A. Pre-requisite Checks and Cleanup
+解除安裝移除 JEV 自身的註冊、啟動設定與程式，保留 `%APPDATA%\JEV-IME` 的
+個人資料。仍載入 DLL 的應用程式可能讓部分檔案延後至重新登入後才能清除。
 
-- Checks if `McBopomofoServer.exe` or `McBopomofoConfig.exe` is currently running and attempts to close them gracefully.
-- Runs a custom VBScript (`scripts\CheckAndCloseAppsWithTIP.vbs`) to detect and close applications that currently have the TSF DLL loaded. This helps prevent file locks that require a system reboot.
+安裝和移除診斷記錄位於執行帳號的 `%TEMP%\JEV-Setup.log` 與
+`%TEMP%\JEV-Uninstall.log`。記錄安裝步驟及錯誤，不記錄打字內容。
 
-### B. File Deployment
-
-Files are extracted to the target directory: `C:\Program Files\OpenVanilla\WinMcBopomofo` (on x64) or `C:\Program Files (x86)\OpenVanilla\WinMcBopomofo` (on 32-bit).
-
-The files deployed include:
-
-- Core Executables:
-    - `McBopomofoServer_<arch>.exe`
-    - `McBopomofoConfig_<arch>.exe`
-- The TSF Client DLL: `McBopomofoTIP_<arch>.dll`
-- Language Models & Data (`data\`): `data.txt`, `data-plain-bpmf.txt`, `dictionary_service.json`, etc.
-- OpenCC Conversion Data (`data\opencc\`): Contains `.ocd2` dictionaries and `tw2s.json`.
-
-*(Note: The installer automatically selects the correct architecture-specific executables based on the target machine's CPU architecture: x86, x64, or ARM64).*
-
-### C. System Registration & Configuration
-
-- **COM Registration (TSF):** The installer executes `regsvr32.exe /s McBopomofoTIP_<arch>.dll`. This registers the DLL as an in-process COM server and notifies the Windows Text Services Framework that the input method is available.
-- **Autorun:** Adds a registry string named `Win-McBopomofo-Server` pointing to the Server executable in `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`. This ensures the background engine starts when the user logs in.
-- **Start Menu Shortcut:** Creates a shortcut in the Start Menu for the configuration app (`McBopomofoConfig_<arch>.exe`).
-
-### D. Post-Installation
-
-- Executes the architecture-appropriate `McBopomofoServer.exe` immediately after the installation finishes, ensuring the user can type right away without logging out.
-
----
-
-## 2. Uninstallation Process
-
-When the user uninstalls the software, the MSI reverses the process:
-
-1. Closes active processes.
-2. Unregisters the TSF Client DLL by calling `regsvr32.exe /u /s McBopomofoTIP_<arch>.dll`.
-3. Removes the Start Menu shortcuts and Autorun registry keys.
-4. Deletes the deployed binaries and data files.
-
----
-
-## 3. How to Build the Installer
-
-Building the MSI installer is automated via the `build_msi.ps1` script at the root of the repository.
-
-### Prerequisites
-
-Make sure you have satisfied the [Development Requirements](../README.md#development-requirements) (Visual Studio with C++ tools for x86/x64/ARM64, CMake, and WiX Toolset).
-
-### Build Command
-
-Open a PowerShell terminal at the project root and run:
+## 建置與交付
 
 ```powershell
-.\build_msi.ps1
+.\build.ps1 -Configuration Release -RunTests
+.\build_exe.ps1 -SkipBuild
 ```
 
-### What the Script Does
+`build_exe.ps1` 固定使用 NSIS 3.11，指定 UTF-8 原始碼，以免繁體中文畫面受
+建置電腦的系統編碼影響。輸出 EXE 與 `.sha256` 檔。
 
-1. **Compiles all architectures:** It calls `cmake` and `cmake --build` sequentially for `x64`, `x86`, and `ARM64`. This ensures all `_x64`, `_x86`, and `_arm64` binaries are available.
-2. **Generates OpenCC dictionaries:** Triggers the OpenCC dictionary build target.
-3. **Converts the License:** Generates an RTF version of `LICENSE.txt` to embed in the MSI wizard UI.
-4. **Executes WiX:** Invokes `wix build` with the `installer/installer.wxs` file, passing the build output paths (e.g., `X64BinDir=build_x64\bin\Release`) as bind variables.
+GitHub `build.yml` 執行原生編譯與 JEV 的九個 CTest target。
+`package.yml` 可重用已測試的二進位檔；它先核對原生程式碼未變，再重新計算
+套件 manifest、打包、執行真實 EXE 安裝與解除安裝檢查，通過後才發佈預覽版。
 
-### Customizing the Build
+安裝驗證檢查檔案雜湊、兩種 COM registry view、背景程式、啟用 profile、
+已安裝應用程式清單，以及解除安裝後保留個人資料。這不代替 Windows 11 中
+Word／Chrome／LINE 等應用程式的實機驗收。
 
-The script supports several flags:
+## 選用 MSI
 
-- **Build Debug MSI:**
-
-  ```powershell
-  .\build_msi.ps1 -Configuration Debug
-  ```
-
-- **Skip Binary Build (If you have already built them):**
-
-  ```powershell
-  .\build_msi.ps1 -SkipBuild
-  ```
-
-- **Custom Output Name:**
-
-  ```powershell
-  .\build_msi.ps1 -OutputName "MyCustomBuild.msi"
-  ```
-
-### Outputs
-
-Once complete, the final installer is placed in the `dist\` directory:
-
-- `dist\Win-McBopomofo-Installer.msi`
+`build_msi.ps1` 及 WiX 6.0.2 原始碼仍保留供開發使用。EXE 是本版主要交付形式；
+MSI 的升級、修復及 rollback 測試尚未完成。兩種安裝方式使用同一 JEV identity，
+切換方式前應先解除安裝原版本，避免兩個安裝器同時管理註冊。
