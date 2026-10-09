@@ -2,6 +2,25 @@
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 
+# A Windows PowerShell child of PowerShell 7 can inherit only Core module paths.
+# Prefer the child host's own built-in modules without changing user settings.
+if ($env:OS -eq 'Windows_NT' -and $PSVersionTable.PSEdition -eq 'Desktop') {
+    $jevModuleRoot = Join-Path $PSHOME 'Modules'
+    $env:PSModulePath = $jevModuleRoot + ';' + $env:PSModulePath
+}
+
+function Get-JevFileSha256 {
+    param([Parameter(Mandatory = $true)][string]$Path)
+    $stream = [IO.File]::OpenRead($Path)
+    $algorithm = [Security.Cryptography.SHA256]::Create()
+    try {
+        return [BitConverter]::ToString($algorithm.ComputeHash($stream)).Replace('-', '').ToLowerInvariant()
+    } finally {
+        $algorithm.Dispose()
+        $stream.Dispose()
+    }
+}
+
 function Assert-JevWindowsX64 {
     param([switch]$RequireAdmin)
     if ($env:OS -ne 'Windows_NT') { throw 'JEV TSF requires Windows 11 x64.' }
@@ -74,7 +93,7 @@ function Test-JevPackage {
         if ($seen.ContainsKey($entry.path)) { throw "Duplicate manifest file: $($entry.path)" }
         $seen[$entry.path] = $true
         if (-not (Test-Path -LiteralPath $fullPath -PathType Leaf)) { throw "Missing package file: $($entry.path)" }
-        if ((Get-FileHash -LiteralPath $fullPath -Algorithm SHA256).Hash -ne $entry.sha256) {
+        if ((Get-JevFileSha256 $fullPath) -ne $entry.sha256) {
             throw "Package checksum mismatch: $($entry.path)"
         }
     }

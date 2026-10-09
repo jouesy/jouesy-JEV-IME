@@ -33,7 +33,7 @@ jobs:
           Expand-Archive -LiteralPath ./dist/JEV-IME-0.1.0-win-x64.zip -DestinationPath $stage
           $manifest = Test-JevPackage $stage
           # Reuse only binaries whose native source has not changed.
-          git diff --exit-code $manifest.sourceRevision HEAD -- src cmake CMakeLists.txt data tests/windows .gitmodules third_party/OpenCC
+          git diff --exit-code $manifest.sourceRevision HEAD -- src cmake CMakeLists.txt data tests .gitmodules third_party/OpenCC ':(exclude)tests/JevInstallerTest.ps1'
           if ($LASTEXITCODE -ne 0) { throw 'Native source differs from the tested binary package; rebuild first.' }
           Copy-Item -LiteralPath ./NOTICE.md -Destination $stage
           Copy-Item -LiteralPath ./docs/install-exe.md -Destination "$stage/README.md"
