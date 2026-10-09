@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: jev-build-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   portable:
     runs-on: ubuntu-latest
@@ -21,7 +25,12 @@ jobs:
           ctest --test-dir build_portable --output-on-failure
       - name: Package integrity checks
         shell: pwsh
-        run: ./tests/JevPackageTest.ps1
+        run: |
+          try { ./tests/JevPackageTest.ps1 }
+          catch {
+            Write-Host "::error::$($_.Exception.Message)"
+            throw
+          }
 
   windows:
     runs-on: windows-latest
@@ -37,7 +46,12 @@ jobs:
           dotnet-version: '8.0.x'
       - name: Build native x64 and x86 and run regression tests
         shell: pwsh
-        run: ./build.ps1 -Configuration Release -RunTests
+        run: |
+          try { ./build.ps1 -Configuration Release -RunTests }
+          catch {
+            Write-Host "::error::$($_.Exception.Message)"
+            throw
+          }
       - name: Install NSIS 3.11
         shell: pwsh
         run: |
@@ -48,7 +62,12 @@ jobs:
         run: ./build_exe.ps1 -SkipBuild
       - name: Check EXE install and uninstall on the disposable runner
         shell: pwsh
-        run: ./tests/JevInstallerTest.ps1 -InstallerPath ./dist/JEV-Setup-0.1.0-win-x64.exe
+        run: |
+          try { ./tests/JevInstallerTest.ps1 -InstallerPath ./dist/JEV-Setup-0.1.0-win-x64.exe }
+          catch {
+            Write-Host "::error::$($_.Exception.Message)"
+            throw
+          }
       - uses: actions/upload-artifact@v4
         with:
           name: JEV-Setup-0.1.0-win-x64

@@ -38,7 +38,7 @@ foreach(_jev_include crt/include sdk/include/ucrt sdk/include/shared
 endforeach()
 set(CMAKE_C_FLAGS_INIT "${_jev_includes}")
 set(CMAKE_CXX_FLAGS_INIT "${_jev_includes}")
-set(CMAKE_RC_FLAGS_INIT "-c 65001 ${_jev_rc_includes}")
+set(CMAKE_RC_FLAGS_INIT "${_jev_rc_includes}")
 set(_jev_libpaths "")
 foreach(_jev_lib crt/lib/${JEV_WINDOWS_ARCH} sdk/lib/ucrt/${JEV_WINDOWS_ARCH}
         sdk/lib/um/${JEV_WINDOWS_ARCH})

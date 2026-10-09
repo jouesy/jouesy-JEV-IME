@@ -40,6 +40,7 @@ target_include_directories(McBopomofoEngine PUBLIC
     ${ENGINE_DIR}/gramambular2
     ${ENGINE_DIR}/Mandarin
     ${CMAKE_SOURCE_DIR}/src/Common
+    ${WINMCBOPOMOFO_GENERATED_DIR}
     ${CMAKE_SOURCE_DIR}/third_party/OpenCC/src
 )
 target_link_libraries(McBopomofoEngine PRIVATE BopomofoBraille icuuc icuin)
@@ -49,7 +50,7 @@ set_target_properties(McBopomofoEngine PROPERTIES CXX_STANDARD 17 CXX_STANDARD_R
 
 # MSVC C++ compatibility for older code
 if(MSVC)
-    target_compile_options(McBopomofoEngine PRIVATE /Zc:char8_t- /FS /FI"${CMAKE_CURRENT_SOURCE_DIR}/IteratorCompat.h")
+    target_compile_options(McBopomofoEngine PRIVATE /Zc:char8_t- /FS)
 endif()
 
 # Server executable

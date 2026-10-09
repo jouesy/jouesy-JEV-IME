@@ -60,5 +60,8 @@ try {
     Invoke-JevNative $hostCommand @('-NoProfile', '-Command', 'exit 0')
     $checks++
     Expect-Rejected { Invoke-JevNative $hostCommand @('-NoProfile', '-Command', 'exit 7') } 'failed native command'
+    # GitHub's pwsh shell propagates LASTEXITCODE after a script returns.
+    # The deliberate failure above has been verified and is not this test's result.
+    $global:LASTEXITCODE = 0
     Write-Host "Passed $checks package and command checks."
 } finally { Remove-Item -LiteralPath $fixture -Recurse -Force }
