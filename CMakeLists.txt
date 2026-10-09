@@ -51,7 +51,16 @@ else()
     set(USE_SYSTEM_MARISA OFF CACHE BOOL "Bundled marisa" FORCE)
     set(USE_SYSTEM_TINYXML2 OFF CACHE BOOL "Bundled tinyxml2" FORCE)
     set(BUILD_DOCUMENTATION OFF CACHE BOOL "No OpenCC docs" FORCE)
-    set(ENABLE_GTEST ${JEV_BUILD_TESTS} CACHE BOOL "GTest for Windows regression tests" FORCE)
+    # OpenCC's ENABLE_GTEST also registers third-party tests, even though its
+    # EXCLUDE_FROM_ALL targets are not built by the JEV build. Load GTest
+    # directly for JEV's regression tests without registering unbuilt tests.
+    set(ENABLE_GTEST OFF CACHE BOOL "Disable OpenCC's own test suite" FORCE)
+    if(JEV_BUILD_TESTS)
+        set(BUILD_GMOCK OFF CACHE BOOL "JEV uses GTest only" FORCE)
+        set(INSTALL_GTEST OFF CACHE BOOL "Do not install build-time test libraries" FORCE)
+        add_subdirectory(third_party/OpenCC/deps/googletest-1.15.0
+            third_party/googletest EXCLUDE_FROM_ALL)
+    endif()
     option(SKIP_OPENCC_DICT "Skip OpenCC dictionaries for client-only builds" OFF)
     add_subdirectory(third_party/OpenCC EXCLUDE_FROM_ALL)
     add_subdirectory(src)

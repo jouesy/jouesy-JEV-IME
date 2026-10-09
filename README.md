@@ -4,9 +4,13 @@
 識別碼、輸入法名稱、安裝流程及使用者資料夾。目標是在 Windows 11 用
 `Win + Space` 切換，並在一般應用程式中直接打字。
 
-本次已實作原始碼修改及可重現的建置／安裝腳本，已在 Linux 編譯、驗證共用
-注音核心。**Windows 編譯、安裝與 Word／Chrome／LINE 實測尚未完成，
-目前沒有已驗證的 EXE、DLL 或 MSI 可下載。**
+安裝檔將放在 **[Releases 下載頁](https://github.com/jouesy/jouesy-JEV-IME/releases)**，
+檔名為 `JEV-Setup-0.1.0-win-x64.exe`。如果 Releases 尚未列出這個檔案，
+表示 Windows 建置與安裝驗證仍在進行；Code 頁面只提供原始碼。
+一般使用者請參考 [EXE 安裝說明](docs/install-exe.md)。
+
+共用注音核心已在 Linux 驗證，Windows 原生編譯與測試正在 GitHub Actions
+執行。Word／Chrome／LINE 的 Windows 11 實機相容性仍待驗收。
 
 已加入 JEV 候選排序介面與測試，但 V0.1 沒有連接 Jev API，沒有錄音或
 Whisper，也没有生成式文字修正。一般注音輸入使用本機詞庫；雲端功能預設關閉。
@@ -30,8 +34,13 @@ CMake 及 Python 3。原始碼 ZIP 已包含 OpenCC；若從此 JEV 專案的 Gi
 ```
 
 登出再登入，按 `Win + Space` 選擇「JEV 智慧注音」。
-建置腳本會產生 `dist/JEV-IME-0.1.0-win-x64.zip`；此路徑是將來建置的輸出，
-不是本次已產生的 Windows 二進位檔。MSI 建置使用固定版本 WiX 6.0.2：
+建置脚本會產生 `dist/JEV-IME-0.1.0-win-x64.zip`。安裝 NSIS 3.11 後可打包單檔 EXE：
+
+```powershell
+.\build_exe.ps1 -SkipBuild
+```
+
+MSI 建置使用固定版本 WiX 6.0.2：
 
 ```powershell
 dotnet tool install --global wix --version 6.0.2
@@ -49,7 +58,7 @@ dotnet tool install --global wix --version 6.0.2
   與第三方授權。腳本安裝檢查兩種 TSF 註冊結果，可嘗試復原舊版。
 - 候選排序只排列原候選，保留讀音及 raw value；未同意、過期、錯誤、無效或
   低信心回應均保留原排序。V0.1 不安裝 API provider。
-- Windows／Linux 建置工作流程及實測驗收表。CI 定義已加入，尚未在遠端執行。
+- Windows／Linux 建置工作流程、EXE 安裝／解除安裝檢查及實機驗收表。
 
 ## Linux 核心驗證
 
