@@ -13,6 +13,11 @@ Unicode true
 !ifndef OUTPUT_FILE
   !error "OUTPUT_FILE is required"
 !endif
+!ifdef NSIS_WIN32
+  !define PACKAGE_FILES "${PACKAGE_DIR}\*"
+!else
+  !define PACKAGE_FILES "${PACKAGE_DIR}/*"
+!endif
 
 Name "JEV 智慧注音 ${PRODUCT_VERSION}"
 OutFile "${OUTPUT_FILE}"
@@ -75,7 +80,7 @@ Section "JEV 智慧注音" SecMain
   SetRegView 64
   StrCpy $PackagePath "$PLUGINSDIR\JEV-package"
   SetOutPath "$PackagePath"
-  File /r "${PACKAGE_DIR}/*"
+  File /r "${PACKAGE_FILES}"
   DetailPrint "正在安裝及註冊 JEV 輸入法…"
   nsExec::ExecToStack /TIMEOUT=180000 '"$PowershellPath" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$PackagePath\scripts\setup.ps1" -SourceDir "$PackagePath" -InstallRoot "$INSTDIR"'
   Pop $ProcessResult

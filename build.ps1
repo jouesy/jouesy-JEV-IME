@@ -45,7 +45,7 @@ try {
     }
     Copy-Item -LiteralPath 'installer/Install-JEV.ps1' -Destination $stage
     Copy-Item -LiteralPath 'installer/Uninstall-JEV.ps1' -Destination $stage
-    Copy-Item -LiteralPath 'docs/windows-quickstart.md' -Destination "$stage/README.md"
+    Copy-Item -LiteralPath 'docs/install-exe.md' -Destination "$stage/README.md"
     Copy-Item -LiteralPath 'docs/windows-validation.md' -Destination $stage
     Copy-Item -LiteralPath 'LICENSE.txt', 'NOTICE.md' -Destination $stage
     # Retain all OpenCC and bundled dependency license notices in binary packages.

@@ -57,6 +57,11 @@ jobs:
         run: |
           choco install nsis --version=3.11 -y --no-progress
           if ($LASTEXITCODE -ne 0) { throw 'NSIS installation failed.' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JEV-IME-0.1.0-win-x64-binaries
+          path: dist/JEV-IME-0.1.0-win-x64.zip
+          if-no-files-found: error
       - name: Build single-file EXE installer
         shell: pwsh
         run: ./build_exe.ps1 -SkipBuild

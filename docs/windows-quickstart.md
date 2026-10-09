@@ -3,9 +3,10 @@
 這是原生 Windows TSF 輸入法的開發版。V0.1 使用離線注音引擎，提供組字、
 候選選字、個人詞庫與設定程式。雲端 Jev、語音辨識及智慧文字修正尚未啟用。
 
-本次交付已在 Linux 編譯並驗證共用注音核心與排序介面；尚未執行 Windows
-編譯、TSF 註冊或 Word／Chrome／LINE 相容性測試。請先在測試用 Windows 11
-x64 或虛擬機器完成驗收，再用於日常工作。
+一般使用者請從 [Releases](https://github.com/jouesy/jouesy-JEV-IME/releases) 下載
+單一 EXE，依 [安裝說明](install-exe.md) 操作。下列指令供開發者從原始碼建置。
+Windows 原生編譯及安裝／移除驗證由 GitHub Actions 執行；Word／Chrome／LINE
+的 Windows 11 實機相容性仍需依驗收表確認。
 
 ## 從原始碼建置
 

@@ -20,7 +20,7 @@ JEV 智慧注音。解除安裝會保留 `%APPDATA%\JEV-IME` 中的個人詞庫�
 
 V0.1 提供離線注音輸入與選字；尚未加入 Jev API、語音輸入或智慧文字修正。
 這是測試版本，Windows 11 的 Word／Chrome／LINE 相容性驗收狀態見
-[Windows 驗收表](windows-validation.md)。
+[Windows 驗收表](https://github.com/jouesy/jouesy-JEV-IME/blob/main/docs/windows-validation.md)。
 
 ## 開發者打包
 
