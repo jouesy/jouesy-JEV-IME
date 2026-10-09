@@ -38,6 +38,21 @@ jobs:
       - name: Build native x64 and x86 and run regression tests
         shell: pwsh
         run: ./build.ps1 -Configuration Release -RunTests
+      - name: Install NSIS 3.11
+        shell: pwsh
+        run: |
+          choco install nsis --version=3.11 -y --no-progress
+          if ($LASTEXITCODE -ne 0) { throw 'NSIS installation failed.' }
+      - name: Build single-file EXE installer
+        shell: pwsh
+        run: ./build_exe.ps1 -SkipBuild
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JEV-Setup-0.1.0-win-x64
+          path: |
+            dist/JEV-Setup-0.1.0-win-x64.exe
+            dist/JEV-Setup-0.1.0-win-x64.exe.sha256
+          if-no-files-found: error
       - name: Install pinned WiX
         shell: pwsh
         run: dotnet tool install --global wix --version 6.0.2
