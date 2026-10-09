@@ -1,0 +1,80 @@
+name: JEV Installer Delivery
+
+on:
+  workflow_dispatch:
+    inputs:
+      native_run_id:
+        description: 'Run that passed native compilation and JEV tests and uploaded the binary ZIP'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: JEV-IME-0.1.0-win-x64-binaries
+          path: dist
+          run-id: ${{ inputs.native_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify tested binaries and prepare installer documentation
+        shell: pwsh
+        run: |
+          . ./scripts/WindowsHelpers.ps1
+          $stage = Join-Path $PWD 'dist/JEV-IME-0.1.0-win-x64'
+          Expand-Archive -LiteralPath ./dist/JEV-IME-0.1.0-win-x64.zip -DestinationPath $stage
+          $manifest = Test-JevPackage $stage
+          # Reuse only binaries whose native source has not changed.
+          git diff --exit-code $manifest.sourceRevision HEAD -- src cmake CMakeLists.txt data tests
+          if ($LASTEXITCODE -ne 0) { throw 'Native source differs from the tested binary package; rebuild first.' }
+          Copy-Item -LiteralPath ./NOTICE.md -Destination $stage
+          Copy-Item -LiteralPath ./docs/install-exe.md -Destination "$stage/README.md"
+          Copy-Item -LiteralPath ./licenses/NSIS-COPYING.txt -Destination "$stage/licenses"
+          $manifest | Add-Member -NotePropertyName installerSourceRevision -NotePropertyValue $env:GITHUB_SHA -Force
+          $manifest.files = @(Get-ChildItem -LiteralPath $stage -Recurse -File |
+            Where-Object { $_.Name -ne 'manifest.json' } | Sort-Object FullName | ForEach-Object {
+              @{ path = $_.FullName.Substring($stage.Length + 1).Replace('\', '/');
+                 sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash }
+            })
+          $manifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath "$stage/manifest.json" -Encoding UTF8
+          $null = Test-JevPackage $stage
+      - name: Install NSIS 3.11
+        shell: pwsh
+        run: |
+          choco install nsis --version=3.11 -y --no-progress
+          if ($LASTEXITCODE -ne 0) { throw 'NSIS installation failed.' }
+      - name: Build installer
+        shell: pwsh
+        run: ./build_exe.ps1 -SkipBuild
+      - name: Verify actual EXE installation and removal
+        shell: pwsh
+        run: |
+          try { ./tests/JevInstallerTest.ps1 -InstallerPath ./dist/JEV-Setup-0.1.0-win-x64.exe }
+          catch {
+            Write-Host "::error::$($_.Exception.Message)"
+            throw
+          }
+      - name: Publish preview installer
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v0.1.0 ./dist/JEV-Setup-0.1.0-win-x64.exe ./dist/JEV-Setup-0.1.0-win-x64.exe.sha256 `
+            --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --prerelease `
+            --title 'JEV 智慧注音 V0.1.0 測試版' --notes-file ./docs/release-v0.1.0.md
+          if ($LASTEXITCODE -ne 0) { throw 'Release upload failed.' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JEV-Setup-0.1.0-win-x64
+          path: |
+            dist/JEV-Setup-0.1.0-win-x64.exe
+            dist/JEV-Setup-0.1.0-win-x64.exe.sha256
+          if-no-files-found: error
